@@ -29,11 +29,11 @@ void ofApp::update(){
         ofPixels pixels = this->grabber.getPixelsRef();
 
         float now = ofGetElapsedTimeMillis();
-        while (this->lastTimeImageWasSaved < now) {
+        while (this->lastTimePixelWasDrawn < now) {
 
             ofColor c = pixels.getColor( this->x, this->y );
             this->screenImage.setColor( this->x, this->y, c );
-            this->lastTimeImageWasSaved += this->millisecondsPerPixel;
+            this->lastTimePixelWasDrawn += this->millisecondsPerPixel;
 
             ++this->x;
             if (this->x == (this->currentColumn + 1) * this->columnWidth) {

@@ -6,18 +6,18 @@ class ofApp : public ofBaseApp{
 
     private:
         ofVideoGrabber grabber;
-        int selectedCameraIndex = 0;
+        int selectedCameraIndex = 1;
 
         ofImage screenImage;
 
-        int cameraWidth = 640;
-        int cameraHeight = 480;
+        int cameraWidth = 1920;
+        int cameraHeight = 1080;
 
-        int columns = 4;
+        int columns = 1;
         int currentColumn = 0;
-        long secondsToComplete = 5 * 60;
+        long secondsToComplete = 24 * 60 * 60;
         float millisecondsPerPixel = 0;
-        float lastTimePixelWasDraw = 0;
+        float lastTimePixelWasDrawn = 0;
         int x = 0;
         int y = 0;
         int columnWidth = 0;
