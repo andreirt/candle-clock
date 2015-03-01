@@ -10,17 +10,21 @@ class ofApp : public ofBaseApp{
 
         ofImage screenImage;
 
-        int cameraWidth = 1920;
-        int cameraHeight = 1080;
+        int cameraWidth = 640;
+        int cameraHeight = 480;
+    
+        int imageWidth = 0;
+        int imageHeight = 0;
 
-        int columns = 1;
+        int columns = 4;
         int currentColumn = 0;
-        long secondsToComplete = 24 * 60 * 60;
+        long secondsToComplete = 60; //24 * 60 * 60;
         float millisecondsPerPixel = 0;
         float lastTimePixelWasDrawn = 0;
         int x = 0;
         int y = 0;
         int columnWidth = 0;
+        int rotations = 1;
 
         float lastTimeImageWasSaved = 0;
         int intervalToSaveImage = 15;

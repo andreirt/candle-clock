@@ -7,9 +7,18 @@ void ofApp::setup(){
 
     this->grabber.setDesiredFrameRate(30);
     this->grabber.initGrabber(this->cameraWidth, this->cameraHeight);
+    
+    if (this->rotations % 2 == 0) {
+        this->imageWidth = this->cameraWidth;
+        this->imageHeight = this->cameraHeight;
+    }
+    else {
+        this->imageWidth = this->cameraHeight;
+        this->imageHeight = this->cameraWidth;
+    }
 
     // image to be drawn
-    this->screenImage.allocate(this->cameraWidth, this->cameraHeight, OF_IMAGE_COLOR_ALPHA);
+    this->screenImage.allocate(this->imageWidth, this->imageHeight, OF_IMAGE_COLOR_ALPHA);
 
     // paints with black
     unsigned char* pixels = this->screenImage.getPixels();
@@ -17,8 +26,10 @@ void ofApp::setup(){
         pixels[i] = 0;
     }
 
-    this->columnWidth = this->cameraWidth / this->columns;
-    this->millisecondsPerPixel = (float) (this->secondsToComplete * 1000) / (float) (this->cameraWidth * this->cameraHeight);
+    this->columnWidth = this->imageWidth / this->columns;
+    float numberOfPixels = this->cameraWidth * this->cameraHeight;
+    float numberOfMilisseconds = this->secondsToComplete * 1000;
+    this->millisecondsPerPixel = numberOfMilisseconds / numberOfPixels;
 }
 
 //--------------------------------------------------------------
@@ -27,6 +38,7 @@ void ofApp::update(){
     this->grabber.update();
     if (this->grabber.isFrameNew()) {
         ofPixels pixels = this->grabber.getPixelsRef();
+        pixels.rotate90( this->rotations );
 
         float now = ofGetElapsedTimeMillis();
         while (this->lastTimePixelWasDrawn < now) {
@@ -40,7 +52,7 @@ void ofApp::update(){
                 this->x = this->currentColumn * this->columnWidth;
                 ++this->y;
 
-                if (this->y == this->cameraHeight) {
+                if (this->y == this->imageHeight) {
                      ++this->currentColumn;
                     this->x = this->currentColumn * this->columnWidth;
                     this->y = 0;
