@@ -1,10 +1,11 @@
 #include "ofApp.h"
+#include <string>
 
 const string ofApp::CAMERA_WIDTH_LABEL = "Largura da câmera";
 const string ofApp::CAMERA_HEIGHT_LABEL = "Altura da câmera";
 const string ofApp::COLUMNS_LABEL = "Colunas";
 const string ofApp::SECONDS_PER_IMAGE_LABEL = "Tempo para completar a imagem (em segundos)";
-const string ofApp::SAVE_IMAGE_LABEL = "Salvar imagem";
+const string ofApp::SAVE_IMAGE_LABEL = "Salvar imagem a cada";
 const string ofApp::RESET_IMAGE_LABEL = "Limpar imagem";
 const string ofApp::SUPPORT_BUTTON_NAME = "support";
 const string ofApp::SAVE_LABEL = "Salvar";
@@ -33,7 +34,7 @@ void ofApp::setup(){
     this->gui->addLabel("title", "Relógio de Vela", OFX_UI_FONT_LARGE);
     this->gui->addSpacer();
 
-    this->cameraPanel = new ofxUICanvas(0, 0, 400, 200);
+    this->cameraPanel = new ofxUICanvas(0, 0, 330, 240);
     this->cameraPanel->setFontSize(OFX_UI_FONT_SMALL, 8);
     this->cameraPanel->setWidgetSpacing(15);
     this->gui->addWidgetDown(this->cameraPanel);
@@ -68,29 +69,10 @@ void ofApp::setup(){
     this->cameraHeightTextInput->setDrawOutlineHighLight(true);
     this->cameraPanel->addWidgetRight( this->cameraHeightTextInput );
 
-    this->cameraPanel->addWidgetDown( new ofxUILabel(360, "Alterações na câmera exigem que", OFX_UI_FONT_SMALL) );
-    this->cameraPanel->addWidgetDown( new ofxUILabel(360, "o software seja reiniciado", OFX_UI_FONT_SMALL) );
-
-    this->imagePanel = new ofxUICanvas(0, 0, 400, 200);
-    this->imagePanel->setFontSize(OFX_UI_FONT_SMALL, 8);
-    this->imagePanel->setWidgetSpacing(15);
-    this->gui->addWidgetRight(this->imagePanel);
-
-    this->columns = 1;
-
-    ofxUILabel* columnsLabel = new ofxUILabel(170, ofApp::COLUMNS_LABEL, OFX_UI_FONT_SMALL);
-    this->imagePanel->addWidgetDown( columnsLabel );
-
-    this->columnsTextInput = new ofxUITextInput(ofApp::COLUMNS_LABEL, "1", 80, 18);
-    this->columnsTextInput->setOnlyNumericInput(true);
-    this->columnsTextInput->setDrawOutline(true);
-    this->columnsTextInput->setDrawOutlineHighLight(true);
-    this->imagePanel->addWidgetRight( this->columnsTextInput );
-
     this->rotations = 0;
 
-    this->imagePanel->addLabel("Rotação da imagem", OFX_UI_FONT_SMALL);
-    this->rotationToggleMatrix = this->imagePanel->addToggleMatrix("rotation", 4, 1);
+    this->cameraPanel->addLabel("Rotação da imagem", OFX_UI_FONT_SMALL);
+    this->rotationToggleMatrix = this->cameraPanel->addToggleMatrix("rotation", 4, 1);
     this->rotationToggleMatrix->setAllowMultiple(false);
 
     ofxUIToggle* zeroRotationToggle = this->rotationToggleMatrix->getToggle(0, 0);
@@ -124,37 +106,63 @@ void ofApp::setup(){
     this->rotationToggleMatrix->setAllToggles(false, false);
     this->rotationToggleMatrix->setToggle(0, 0, true, false);
 
-    ofxUILabel* secondsPerImageLabel = new ofxUILabel(170, ofApp::SECONDS_PER_IMAGE_LABEL, OFX_UI_FONT_SMALL);
+    this->imagePanel = new ofxUICanvas(0, 0, 430, 240);
+    this->imagePanel->setFontSize(OFX_UI_FONT_SMALL, 8);
+    this->imagePanel->setWidgetSpacing(15);
+    this->gui->addWidgetRight(this->imagePanel);
+
+    this->columns = 1;
+
+    ofxUILabel* columnsLabel = new ofxUILabel(170, ofApp::COLUMNS_LABEL, OFX_UI_FONT_SMALL);
+    this->imagePanel->addWidgetDown( columnsLabel );
+
+    this->columnsTextInput = new ofxUITextInput(ofApp::COLUMNS_LABEL, "1", 80, 18);
+    this->columnsTextInput->setOnlyNumericInput(true);
+    this->columnsTextInput->setDrawOutline(true);
+    this->columnsTextInput->setDrawOutlineHighLight(true);
+    this->imagePanel->addWidgetRight( this->columnsTextInput );
+
+    ofxUILabel* secondsPerImageLabel = new ofxUILabel(390, ofApp::SECONDS_PER_IMAGE_LABEL, OFX_UI_FONT_SMALL);
     this->imagePanel->addWidgetDown( secondsPerImageLabel );
 
     this->secondsPerImageTextInput = new ofxUITextInput(ofApp::SECONDS_PER_IMAGE_LABEL, "360", 80, 18);
     this->secondsPerImageTextInput->setOnlyNumericInput(true);
     this->secondsPerImageTextInput->setDrawOutline(true);
     this->secondsPerImageTextInput->setDrawOutlineHighLight(true);
-    this->imagePanel->addWidgetRight( this->secondsPerImageTextInput );
+    this->imagePanel->addWidgetDown( this->secondsPerImageTextInput );
 
-    ofxUIToggle* saveToggle = this->imagePanel->addToggle(ofApp::SAVE_IMAGE_LABEL, true, 16, 16);
-    saveToggle->setDrawOutline(true);
+    this->saveImageToggle = new ofxUIToggle(ofApp::SAVE_IMAGE_LABEL, true, 16, 16);
+    this->saveImageToggle->setDrawOutline(true);
+    this->imagePanel->addWidgetDown(this->saveImageToggle);
 
     this->intervalToSaveImage = 15;
 
-    this->intervalToSaveTextInput = new ofxUITextInput("A cada", "15", 80, 18);
+    this->intervalToSaveTextInput = new ofxUITextInput("A cada", "15", 60, 18);
     this->intervalToSaveTextInput->setOnlyNumericInput(true);
     this->intervalToSaveTextInput->setDrawOutline(true);
     this->intervalToSaveTextInput->setDrawOutlineHighLight(true);
-    this->imagePanel->addWidgetDown( this->intervalToSaveTextInput );
+    this->imagePanel->addWidgetRight( this->intervalToSaveTextInput );
 
     ofxUILabel* minutesLabel = new ofxUILabel(170, "minutos", OFX_UI_FONT_SMALL);
     this->imagePanel->addWidgetRight( minutesLabel );
 
-    ofxUILabelButton* clearButton = this->gui->addLabelButton(ofApp::RESET_IMAGE_LABEL, false, 200, 20);
+    ofxUILabelButton* clearButton = this->gui->addLabelButton(ofApp::RESET_IMAGE_LABEL, false, 380, 20);
     clearButton->setDrawFill(true);
     clearButton->setDrawOutline(true);
     this->imagePanel->addWidgetDown( clearButton );
 
-    this->gui->addSpacer();
-    ofxUIToggle* showAtStartToggle = this->gui->addToggle("Exibir esta tela ao iniciar", true, 16, 16);
-    showAtStartToggle->setDrawOutline(true);
+    this->settingsPanel = new ofxUICanvas(0, 0, 300, 90);
+    this->settingsPanel->setFontSize(OFX_UI_FONT_SMALL, 8);
+    this->settingsPanel->setWidgetSpacing(15);
+    this->gui->addWidgetRight(this->settingsPanel);
+
+    this->showAtStartupToggle = this->settingsPanel->addToggle("Exibir esta tela ao iniciar", true, 16, 16);
+    this->showAtStartupToggle->setDrawOutline(true);
+    this->settingsPanel->addSpacer();
+
+    this->fullScreenToggle = this->settingsPanel->addToggle("Tela cheia", true, 16, 16);
+    this->fullScreenToggle->setDrawOutline(true);
+
     this->gui->addSpacer();
 
     ofxUILabelButton* saveButton = this->gui->addLabelButton(ofApp::SAVE_LABEL, false, 100, 20);
@@ -180,14 +188,14 @@ void ofApp::setup(){
     ofAddListener(this->cameraPanel->newGUIEvent, this, &ofApp::cameraPanelEvent);
     ofAddListener(this->imagePanel->newGUIEvent, this, &ofApp::imagePanelEvent);
 
-    this->gui->loadSettings("settings.xml");
+    this->settingsPanel->loadSettings("settings.xml");
     this->cameraPanel->loadSettings("camera.xml");
     this->imagePanel->loadSettings("image.xml");
 
     // reads values from controls and stores them into properties
     this->applyConfigurationChanges();
 
-    if (showAtStartToggle->getValue()) {
+    if (this->showAtStartup) {
         this->showConfigurationPanel();
     }
     else {
@@ -214,15 +222,6 @@ void ofApp::reset()
     }
     else {
         this->videoGrabber->setDeviceID( 0 );
-    }
-
-    if (this->rotations % 2 == 0) {
-        this->imageWidth = this->cameraWidthTextInput->getIntValue();
-        this->imageHeight = this->cameraHeightTextInput->getIntValue();
-    }
-    else {
-        this->imageWidth = this->cameraHeightTextInput->getIntValue();
-        this->imageHeight = this->cameraWidthTextInput->getIntValue();
     }
 
     this->videoGrabber->setDesiredFrameRate(30);
@@ -305,7 +304,20 @@ void ofApp::update(){
 
 //--------------------------------------------------------------
 void ofApp::draw(){
-    this->screenImage.draw(0, 0);
+    // We scale the image so it covers all the screen.
+    // The image is croppred if necessary.
+    float hScale = (float) ofGetWidth() / (float) this->screenImage.width;
+    float vScale = (float) ofGetHeight() / (float) this->screenImage.height;
+
+    float scale = max(hScale, vScale);
+
+    int scaledWidth = (int) roundf((float) this->screenImage.width * scale);
+    int scaledHeight = (int) roundf((float) this->screenImage.height * scale);
+
+    int x = (ofGetWidth() - scaledWidth) / 2;
+    int y = (ofGetHeight() - scaledHeight) / 2;
+
+    this->screenImage.draw(x, y, scaledWidth, scaledHeight);
 }
 
 //--------------------------------------------------------------
@@ -398,9 +410,9 @@ void ofApp::guiEvent(ofxUIEventArgs &e)
         // catches the click when mouse is released, not pressed
         if (!e.getButton()->getValue()) {
 
-            this->gui->saveSettings("settings.xml");
             this->cameraPanel->saveSettings("camera.xml");
             this->imagePanel->saveSettings("image.xml");
+            this->settingsPanel->saveSettings("settings.xml");
             this->applyConfigurationChanges();
             this->reset();
             this->hideConfigurationPanel();
@@ -432,8 +444,11 @@ void ofApp::cameraPanelEvent(ofxUIEventArgs &e)
 void ofApp::imagePanelEvent(ofxUIEventArgs &e)
 {
     if (e.getName() == ofApp::RESET_IMAGE_LABEL) {
-        this->fillImageWithWhite( &this->screenImage );
-        this->screenImage.saveImage("candle_clock.png");
+        // catches the click when mouse is released, not pressed
+        if (!e.getButton()->getValue()) {
+            this->fillImageWithWhite( &this->screenImage );
+            this->screenImage.saveImage("candle_clock.png");
+        }
     }
 }
 
@@ -442,6 +457,7 @@ void ofApp::hideConfigurationPanel()
     this->gui->setVisible(false);
     this->cameraPanel->setVisible(false);
     this->imagePanel->setVisible(false);
+    this->settingsPanel->setVisible(false);
     ofHideCursor();
 }
 
@@ -450,6 +466,7 @@ void ofApp::showConfigurationPanel()
     this->gui->setVisible(true);
     this->cameraPanel->setVisible(true);
     this->imagePanel->setVisible(true);
+    this->settingsPanel->setVisible(true);
     ofShowCursor();
 }
 
@@ -469,8 +486,20 @@ void ofApp::cancelConfigurationChanges()
         this->rotationToggleMatrix->getToggle(3, 0)->setValue(true);
     }
 
-    this->columnsTextInput->setTextString( std::to_string(this->columns) );
-    this->intervalToSaveTextInput->setTextString( std::to_string(this->intervalToSaveImage) );
+    if (this->rotations % 2 == 0) {
+        this->cameraWidthTextInput->setTextString( ofToString(this->imageWidth) );
+        this->cameraHeightTextInput->setTextString( ofToString(this->imageHeight) );
+    }
+    else {
+        this->cameraWidthTextInput->setTextString( ofToString(this->imageHeight) );
+        this->cameraHeightTextInput->setTextString( ofToString(this->imageWidth) );
+    }
+
+    this->columnsTextInput->setTextString( ofToString(this->columns) );
+    this->intervalToSaveTextInput->setTextString( ofToString(this->intervalToSaveImage) );
+    this->showAtStartupToggle->setValue( this->showAtStartup );
+    this->fullScreenToggle->setValue( this->fullScreen );
+    this->saveImageToggle->setValue( this->saveImage );
 }
 
 void ofApp::applyConfigurationChanges()
@@ -488,6 +517,27 @@ void ofApp::applyConfigurationChanges()
         this->rotations = 3;
     }
 
+    if (this->rotations % 2 == 0) {
+        this->imageWidth = this->cameraWidthTextInput->getIntValue();
+        this->imageHeight = this->cameraHeightTextInput->getIntValue();
+    }
+    else {
+        this->imageWidth = this->cameraHeightTextInput->getIntValue();
+        this->imageHeight = this->cameraWidthTextInput->getIntValue();
+    }
+
     this->columns = this->columnsTextInput->getIntValue();
     this->intervalToSaveImage = this->intervalToSaveTextInput->getIntValue();
+
+    this->showAtStartup = this->showAtStartupToggle->getValue();
+    this->fullScreen = this->fullScreenToggle->getValue();
+    this->saveImage = this->saveImageToggle->getValue();
+
+    if (this->fullScreen) {
+        ofSetFullscreen(true);
+    }
+    else {
+        ofSetFullscreen(false);
+        ofSetWindowShape(this->imageWidth, this->imageHeight);
+    }
 }

@@ -9,6 +9,7 @@ private:
     ofxUICanvas *gui;
     ofxUICanvas *cameraPanel;
     ofxUICanvas *imagePanel;
+    ofxUICanvas *settingsPanel;
 
     ofVideoGrabber* videoGrabber;
     int selectedCameraIndex = 1;
@@ -38,6 +39,15 @@ private:
 
     ofxUIToggleMatrix* rotationToggleMatrix;
     int rotations;
+
+    ofxUIToggle* showAtStartupToggle;
+    bool showAtStartup;
+
+    ofxUIToggle* fullScreenToggle;
+    bool fullScreen;
+
+    ofxUIToggle* saveImageToggle;
+    bool saveImage;
 
     void saveCurrentImage();
     void fillImageWithWhite( ofImage* image );
