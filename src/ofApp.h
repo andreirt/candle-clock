@@ -37,7 +37,10 @@ private:
     ofxUITextInput* secondsPerImageTextInput;
     ofxUITextInput* intervalToSaveTextInput;
 
-    ofxUIToggleMatrix* rotationToggleMatrix;
+    ofxUIToggle* zeroRotationToggle;
+    ofxUIToggle* ninetyRotationToggle;
+    ofxUIToggle* oneHundredEightyRotationToggle;
+    ofxUIToggle* twoHundredSeventyRotationToggle;
     int rotations;
 
     ofxUIToggle* showAtStartupToggle;
@@ -66,6 +69,11 @@ private:
     const static string CANCEL_LABEL;
     const static string RESET_IMAGE_LABEL;
     const static string SUPPORT_BUTTON_NAME;
+
+    const static string ZERO_DEGREES_LABEL;
+    const static string NINETY_DEGREES_LABEL;
+    const static string ONE_HUNDRED_EIGHTY_DEGREES_LABEL;
+    const static string TWO_HUNDRED_SEVENTY_DEGREES_LABEL;
 
 public:
     void setup();

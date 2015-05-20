@@ -11,6 +11,12 @@ const string ofApp::SUPPORT_BUTTON_NAME = "support";
 const string ofApp::SAVE_LABEL = "Salvar";
 const string ofApp::CANCEL_LABEL = "Cancelar";
 
+const string ofApp::ZERO_DEGREES_LABEL = "0 graus";
+const string ofApp::NINETY_DEGREES_LABEL = "90 graus";
+const string ofApp::ONE_HUNDRED_EIGHTY_DEGREES_LABEL = "180 graus";
+const string ofApp::TWO_HUNDRED_SEVENTY_DEGREES_LABEL = "270 graus";
+
+
 //--------------------------------------------------------------
 void ofApp::setup(){
 
@@ -34,7 +40,7 @@ void ofApp::setup(){
     this->gui->addLabel("title", "Relógio de Vela", OFX_UI_FONT_LARGE);
     this->gui->addSpacer();
 
-    this->cameraPanel = new ofxUICanvas(0, 0, 330, 240);
+    this->cameraPanel = new ofxUICanvas(0, 0, 330, 280);
     this->cameraPanel->setFontSize(OFX_UI_FONT_SMALL, 8);
     this->cameraPanel->setWidgetSpacing(15);
     this->gui->addWidgetDown(this->cameraPanel);
@@ -72,41 +78,24 @@ void ofApp::setup(){
     this->rotations = 0;
 
     this->cameraPanel->addLabel("Rotação da imagem", OFX_UI_FONT_SMALL);
-    this->rotationToggleMatrix = this->cameraPanel->addToggleMatrix("rotation", 4, 1);
-    this->rotationToggleMatrix->setAllowMultiple(false);
 
-    ofxUIToggle* zeroRotationToggle = this->rotationToggleMatrix->getToggle(0, 0);
-    zeroRotationToggle->setName("zero");
-    zeroRotationToggle->setDrawOutline(true);
-    zeroRotationToggle->setLabelVisible(true);
-    zeroRotationToggle->setLabelPosition(OFX_UI_WIDGET_POSITION_RIGHT);
-    zeroRotationToggle->getLabelWidget()->setLabel("0 graus");
+    this->zeroRotationToggle = new ofxUIToggle(ofApp::ZERO_DEGREES_LABEL, true, 16, 16);
+    this->zeroRotationToggle->setDrawOutline(true);
+    this->cameraPanel->addWidgetDown(this->zeroRotationToggle);
 
-    ofxUIToggle* ninetyRotationToggle = this->rotationToggleMatrix->getToggle(1, 0);
-    ninetyRotationToggle->setName("ninety");
-    ninetyRotationToggle->setDrawOutline(true);
-    ninetyRotationToggle->setLabelVisible(true);
-    ninetyRotationToggle->setLabelPosition(OFX_UI_WIDGET_POSITION_RIGHT);
-    ninetyRotationToggle->getLabelWidget()->setLabel("90 graus");
+    this->ninetyRotationToggle = new ofxUIToggle(ofApp::NINETY_DEGREES_LABEL, true, 16, 16);
+    this->ninetyRotationToggle->setDrawOutline(true);
+    this->cameraPanel->addWidgetDown(this->ninetyRotationToggle);
 
-    ofxUIToggle* oneHundredEightyRotationToggle = this->rotationToggleMatrix->getToggle(2, 0);
-    oneHundredEightyRotationToggle->setName("180");
-    oneHundredEightyRotationToggle->setDrawOutline(true);
-    oneHundredEightyRotationToggle->setLabelVisible(true);
-    oneHundredEightyRotationToggle->setLabelPosition(OFX_UI_WIDGET_POSITION_RIGHT);
-    oneHundredEightyRotationToggle->getLabelWidget()->setLabel("180 graus");
+    this->oneHundredEightyRotationToggle = new ofxUIToggle(ofApp::ONE_HUNDRED_EIGHTY_DEGREES_LABEL, true, 16, 16);
+    this->oneHundredEightyRotationToggle->setDrawOutline(true);
+    this->cameraPanel->addWidgetDown(this->oneHundredEightyRotationToggle);
 
-    ofxUIToggle* twoHundredSeventyRotationToggle = this->rotationToggleMatrix->getToggle(3, 0);
-    twoHundredSeventyRotationToggle->setName("270");
-    twoHundredSeventyRotationToggle->setDrawOutline(true);
-    twoHundredSeventyRotationToggle->setLabelVisible(true);
-    twoHundredSeventyRotationToggle->setLabelPosition(OFX_UI_WIDGET_POSITION_RIGHT);
-    twoHundredSeventyRotationToggle->getLabelWidget()->setLabel("270 graus");
+    this->twoHundredSeventyRotationToggle = new ofxUIToggle(ofApp::TWO_HUNDRED_SEVENTY_DEGREES_LABEL, true, 16, 16);
+    this->twoHundredSeventyRotationToggle->setDrawOutline(true);
+    this->cameraPanel->addWidgetDown(this->twoHundredSeventyRotationToggle);
 
-    this->rotationToggleMatrix->setAllToggles(false, false);
-    this->rotationToggleMatrix->setToggle(0, 0, true, false);
-
-    this->imagePanel = new ofxUICanvas(0, 0, 430, 240);
+    this->imagePanel = new ofxUICanvas(0, 0, 430, 280);
     this->imagePanel->setFontSize(OFX_UI_FONT_SMALL, 8);
     this->imagePanel->setWidgetSpacing(15);
     this->gui->addWidgetRight(this->imagePanel);
@@ -116,7 +105,7 @@ void ofApp::setup(){
     ofxUILabel* columnsLabel = new ofxUILabel(170, ofApp::COLUMNS_LABEL, OFX_UI_FONT_SMALL);
     this->imagePanel->addWidgetDown( columnsLabel );
 
-    this->columnsTextInput = new ofxUITextInput(ofApp::COLUMNS_LABEL, "1", 80, 18);
+    this->columnsTextInput = new ofxUITextInput("columns", "1", 80, 18);
     this->columnsTextInput->setOnlyNumericInput(true);
     this->columnsTextInput->setDrawOutline(true);
     this->columnsTextInput->setDrawOutlineHighLight(true);
@@ -125,7 +114,7 @@ void ofApp::setup(){
     ofxUILabel* secondsPerImageLabel = new ofxUILabel(390, ofApp::SECONDS_PER_IMAGE_LABEL, OFX_UI_FONT_SMALL);
     this->imagePanel->addWidgetDown( secondsPerImageLabel );
 
-    this->secondsPerImageTextInput = new ofxUITextInput(ofApp::SECONDS_PER_IMAGE_LABEL, "360", 80, 18);
+    this->secondsPerImageTextInput = new ofxUITextInput("seconds", "360", 80, 18);
     this->secondsPerImageTextInput->setOnlyNumericInput(true);
     this->secondsPerImageTextInput->setDrawOutline(true);
     this->secondsPerImageTextInput->setDrawOutlineHighLight(true);
@@ -151,7 +140,7 @@ void ofApp::setup(){
     clearButton->setDrawOutline(true);
     this->imagePanel->addWidgetDown( clearButton );
 
-    this->settingsPanel = new ofxUICanvas(0, 0, 300, 90);
+    this->settingsPanel = new ofxUICanvas(0, 0, 300, 120);
     this->settingsPanel->setFontSize(OFX_UI_FONT_SMALL, 8);
     this->settingsPanel->setWidgetSpacing(15);
     this->gui->addWidgetRight(this->settingsPanel);
@@ -175,7 +164,7 @@ void ofApp::setup(){
     this->gui->addWidgetRight(cancelButton);
     this->gui->addSpacer();
 
-    this->gui->addLabel("Ampulheta - Andrei Thomaz, 2015");
+    this->gui->addLabel("Relógio de Vela - Andrei Thomaz, 2015");
     this->gui->addLabel("Integrante do projeto Máquinas do Tempo, desenvolvido com apoio da Bolsa de Artes Visual da Funarte 2014");
     this->gui->addLabel("Desenvolvido em C++ / OpenFrameworks e distribuído sob a licença MPL");
     this->gui->addLabel("Programação por Andrei Thomaz e Vitor Andrioli");
@@ -194,6 +183,9 @@ void ofApp::setup(){
 
     // reads values from controls and stores them into properties
     this->applyConfigurationChanges();
+
+    ofLog() << "this->columnsTextInput->getTextString(): " << this->columnsTextInput->getTextString();
+    ofLog() << "this->columns: " << this->columns;
 
     if (this->showAtStartup) {
         this->showConfigurationPanel();
@@ -438,7 +430,27 @@ void ofApp::guiEvent(ofxUIEventArgs &e)
 
 void ofApp::cameraPanelEvent(ofxUIEventArgs &e)
 {
-    ofLog() << "e.getName(): " << e.getName();
+    if (e.getName() == ofApp::ZERO_DEGREES_LABEL) {
+        this->ninetyRotationToggle->setValue(false);
+        this->oneHundredEightyRotationToggle->setValue(false);
+        this->twoHundredSeventyRotationToggle->setValue(false);
+    }
+    else if (e.getName() == ofApp::NINETY_DEGREES_LABEL) {
+        this->zeroRotationToggle->setValue(false);
+        this->oneHundredEightyRotationToggle->setValue(false);
+        this->twoHundredSeventyRotationToggle->setValue(false);
+    }
+    else if (e.getName() == ofApp::ONE_HUNDRED_EIGHTY_DEGREES_LABEL) {
+        this->zeroRotationToggle->setValue(false);
+        this->ninetyRotationToggle->setValue(false);
+        this->twoHundredSeventyRotationToggle->setValue(false);
+    }
+    else if (e.getName() == ofApp::TWO_HUNDRED_SEVENTY_DEGREES_LABEL) {
+        this->zeroRotationToggle->setValue(false);
+        this->ninetyRotationToggle->setValue(false);
+        this->oneHundredEightyRotationToggle->setValue(false);
+    }
+
 }
 
 void ofApp::imagePanelEvent(ofxUIEventArgs &e)
@@ -464,6 +476,8 @@ void ofApp::hideConfigurationPanel()
 void ofApp::showConfigurationPanel()
 {
     this->gui->setVisible(true);
+    this->gui->disableKeyEventCallbacks();
+
     this->cameraPanel->setVisible(true);
     this->imagePanel->setVisible(true);
     this->settingsPanel->setVisible(true);
@@ -472,19 +486,10 @@ void ofApp::showConfigurationPanel()
 
 void ofApp::cancelConfigurationChanges()
 {
-    this->rotationToggleMatrix->setAllToggles(false, false);
-    if (this->rotations == 0) {
-        this->rotationToggleMatrix->getToggle(0, 0)->setValue(true);
-    }
-    else if (this->rotations == 1) {
-        this->rotationToggleMatrix->getToggle(1, 0)->setValue(true);
-    }
-    else if (this->rotations == 2) {
-        this->rotationToggleMatrix->getToggle(2, 0)->setValue(true);
-    }
-    else if (this->rotations == 3) {
-        this->rotationToggleMatrix->getToggle(3, 0)->setValue(true);
-    }
+    this->zeroRotationToggle->setValue(this->rotations == 0);
+    this->ninetyRotationToggle->setValue(this->rotations == 1);
+    this->oneHundredEightyRotationToggle->setValue(this->rotations == 2);
+    this->twoHundredSeventyRotationToggle->setValue(this->rotations == 3);
 
     if (this->rotations % 2 == 0) {
         this->cameraWidthTextInput->setTextString( ofToString(this->imageWidth) );
@@ -504,18 +509,25 @@ void ofApp::cancelConfigurationChanges()
 
 void ofApp::applyConfigurationChanges()
 {
-    if (this->rotationToggleMatrix->getState(1, 0)) {
+    ofLog() << "this->oneHundredEightyRotationToggle->getValue(): " << this->oneHundredEightyRotationToggle->getValue();
+
+    if (this->zeroRotationToggle->getValue()) {
         this->rotations = 0;
     }
-    if (this->rotationToggleMatrix->getState(1, 0)) {
+    if (this->ninetyRotationToggle->getValue()) {
         this->rotations = 1;
     }
-    else if (this->rotationToggleMatrix->getState(2, 0)) {
+    else if (this->oneHundredEightyRotationToggle->getValue()) {
         this->rotations = 2;
     }
-    else if (this->rotationToggleMatrix->getState(3, 0)) {
+    else if (this->twoHundredSeventyRotationToggle->getValue()) {
         this->rotations = 3;
     }
+
+    this->zeroRotationToggle->setValue(this->rotations == 0);
+    this->ninetyRotationToggle->setValue(this->rotations == 1);
+    this->oneHundredEightyRotationToggle->setValue(this->rotations == 2);
+    this->twoHundredSeventyRotationToggle->setValue(this->rotations == 3);
 
     if (this->rotations % 2 == 0) {
         this->imageWidth = this->cameraWidthTextInput->getIntValue();
