@@ -136,6 +136,8 @@ void ofApp::setup(){
     ofxUIToggle* saveToggle = this->imagePanel->addToggle(ofApp::SAVE_IMAGE_LABEL, true, 16, 16);
     saveToggle->setDrawOutline(true);
 
+    this->intervalToSaveImage = 15;
+
     this->intervalToSaveTextInput = new ofxUITextInput("A cada", "15", 80, 18);
     this->intervalToSaveTextInput->setOnlyNumericInput(true);
     this->intervalToSaveTextInput->setDrawOutline(true);
@@ -292,8 +294,7 @@ void ofApp::update(){
 
         this->screenImage.update();
 
-        int intervalToSaveImage = this->intervalToSaveTextInput->getIntValue();
-        if (ofGetElapsedTimef() - this->lastTimeImageWasSaved > intervalToSaveImage * 60) {
+        if (ofGetElapsedTimef() - this->lastTimeImageWasSaved > this->intervalToSaveImage * 60) {
             this->saveCurrentImage();
             this->lastTimeImageWasSaved = ofGetElapsedTimef();
         }
@@ -469,6 +470,7 @@ void ofApp::cancelConfigurationChanges()
     }
 
     this->columnsTextInput->setTextString( std::to_string(this->columns) );
+    this->intervalToSaveTextInput->setTextString( std::to_string(this->intervalToSaveImage) );
 }
 
 void ofApp::applyConfigurationChanges()
@@ -487,4 +489,5 @@ void ofApp::applyConfigurationChanges()
     }
 
     this->columns = this->columnsTextInput->getIntValue();
+    this->intervalToSaveImage = this->intervalToSaveTextInput->getIntValue();
 }

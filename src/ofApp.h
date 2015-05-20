@@ -25,6 +25,7 @@ private:
     int y;
     int columnWidth;
     int columns;
+    int intervalToSaveImage;
 
     float lastTimeImageWasSaved;
 
