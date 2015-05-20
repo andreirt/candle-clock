@@ -76,6 +76,8 @@ void ofApp::setup(){
     this->imagePanel->setWidgetSpacing(15);
     this->gui->addWidgetRight(this->imagePanel);
 
+    this->columns = 1;
+
     ofxUILabel* columnsLabel = new ofxUILabel(170, ofApp::COLUMNS_LABEL, OFX_UI_FONT_SMALL);
     this->imagePanel->addWidgetDown( columnsLabel );
 
@@ -180,6 +182,9 @@ void ofApp::setup(){
     this->cameraPanel->loadSettings("camera.xml");
     this->imagePanel->loadSettings("image.xml");
 
+    // reads values from controls and stores them into properties
+    this->applyConfigurationChanges();
+
     if (showAtStartToggle->getValue()) {
         this->showConfigurationPanel();
     }
@@ -237,7 +242,7 @@ void ofApp::reset()
 
     }
 
-    this->columnWidth = this->imageWidth / this->columnsTextInput->getIntValue();
+    this->columnWidth = this->imageWidth / this->columns;
     float numberOfPixels = this->cameraWidthTextInput->getIntValue() * this->cameraHeightTextInput->getIntValue();
     float numberOfMilisseconds = this->secondsPerImageTextInput->getIntValue() * 1000;
     this->millisecondsPerPixel = numberOfMilisseconds / numberOfPixels;
@@ -274,7 +279,7 @@ void ofApp::update(){
                     this->x = this->currentColumn * this->columnWidth;
                     this->y = 0;
 
-                    if (this->currentColumn == this->columnsTextInput->getIntValue()) {
+                    if (this->currentColumn == this->columns) {
                         this->x = 0;
                         this->currentColumn = 0;
                     }
@@ -462,6 +467,8 @@ void ofApp::cancelConfigurationChanges()
     else if (this->rotations == 3) {
         this->rotationToggleMatrix->getToggle(3, 0)->setValue(true);
     }
+
+    this->columnsTextInput->setTextString( std::to_string(this->columns) );
 }
 
 void ofApp::applyConfigurationChanges()
@@ -478,4 +485,6 @@ void ofApp::applyConfigurationChanges()
     else if (this->rotationToggleMatrix->getState(3, 0)) {
         this->rotations = 3;
     }
+
+    this->columns = this->columnsTextInput->getIntValue();
 }
