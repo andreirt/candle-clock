@@ -66,6 +66,7 @@ void ofApp::setup(){
     this->cameraWidthTextInput->setDrawOutline(true);
     this->cameraWidthTextInput->setDrawOutlineHighLight(true);
     this->cameraPanel->addWidgetRight( cameraWidthTextInput );
+    this->textInputs.push_back(this->cameraWidthTextInput);
 
     ofxUILabel* cameraHeightLabel = new ofxUILabel(170, ofApp::CAMERA_HEIGHT_LABEL, OFX_UI_FONT_SMALL);
     this->cameraPanel->addWidgetDown( cameraHeightLabel );
@@ -74,6 +75,7 @@ void ofApp::setup(){
     this->cameraHeightTextInput->setDrawOutline(true);
     this->cameraHeightTextInput->setDrawOutlineHighLight(true);
     this->cameraPanel->addWidgetRight( this->cameraHeightTextInput );
+    this->textInputs.push_back(this->cameraHeightTextInput);
 
     this->rotations = 0;
 
@@ -110,6 +112,7 @@ void ofApp::setup(){
     this->columnsTextInput->setDrawOutline(true);
     this->columnsTextInput->setDrawOutlineHighLight(true);
     this->imagePanel->addWidgetRight( this->columnsTextInput );
+    this->textInputs.push_back(this->columnsTextInput);
 
     ofxUILabel* secondsPerImageLabel = new ofxUILabel(390, ofApp::SECONDS_PER_IMAGE_LABEL, OFX_UI_FONT_SMALL);
     this->imagePanel->addWidgetDown( secondsPerImageLabel );
@@ -119,6 +122,7 @@ void ofApp::setup(){
     this->secondsPerImageTextInput->setDrawOutline(true);
     this->secondsPerImageTextInput->setDrawOutlineHighLight(true);
     this->imagePanel->addWidgetDown( this->secondsPerImageTextInput );
+    this->textInputs.push_back(this->secondsPerImageTextInput);
 
     this->saveImageToggle = new ofxUIToggle(ofApp::SAVE_IMAGE_LABEL, true, 16, 16);
     this->saveImageToggle->setDrawOutline(true);
@@ -131,6 +135,7 @@ void ofApp::setup(){
     this->intervalToSaveTextInput->setDrawOutline(true);
     this->intervalToSaveTextInput->setDrawOutlineHighLight(true);
     this->imagePanel->addWidgetRight( this->intervalToSaveTextInput );
+    this->textInputs.push_back(this->intervalToSaveTextInput);
 
     ofxUILabel* minutesLabel = new ofxUILabel(170, "minutos", OFX_UI_FONT_SMALL);
     this->imagePanel->addWidgetRight( minutesLabel );
@@ -426,6 +431,13 @@ void ofApp::guiEvent(ofxUIEventArgs &e)
             ofLaunchBrowser("http://www.funarte.gov.br/");
         }
     }
+
+    if (e.getKind() == OFX_UI_WIDGET_TEXTINPUT){
+        ofxUITextInput *ti = (ofxUITextInput *) e.widget;
+        if (ti->getInputTriggerType() == OFX_UI_TEXTINPUT_ON_FOCUS){
+            this->unfocusAllTextInputs(ti);
+        }
+    }
 }
 
 void ofApp::cameraPanelEvent(ofxUIEventArgs &e)
@@ -451,6 +463,12 @@ void ofApp::cameraPanelEvent(ofxUIEventArgs &e)
         this->oneHundredEightyRotationToggle->setValue(false);
     }
 
+    if (e.getKind() == OFX_UI_WIDGET_TEXTINPUT){
+        ofxUITextInput *ti = (ofxUITextInput *) e.widget;
+        if (ti->getInputTriggerType() == OFX_UI_TEXTINPUT_ON_FOCUS){
+            this->unfocusAllTextInputs(ti);
+        }
+    }
 }
 
 void ofApp::imagePanelEvent(ofxUIEventArgs &e)
@@ -460,6 +478,13 @@ void ofApp::imagePanelEvent(ofxUIEventArgs &e)
         if (!e.getButton()->getValue()) {
             this->fillImageWithWhite( &this->screenImage );
             this->screenImage.saveImage("candle_clock.png");
+        }
+    }
+
+    if (e.getKind() == OFX_UI_WIDGET_TEXTINPUT){
+        ofxUITextInput *ti = (ofxUITextInput *) e.widget;
+        if (ti->getInputTriggerType() == OFX_UI_TEXTINPUT_ON_FOCUS){
+            this->unfocusAllTextInputs(ti);
         }
     }
 }
@@ -551,5 +576,13 @@ void ofApp::applyConfigurationChanges()
     else {
         ofSetFullscreen(false);
         ofSetWindowShape(this->imageWidth, this->imageHeight);
+    }
+}
+
+void ofApp::unfocusAllTextInputs(ofxUITextInput* except){
+    for (int i = 0; i < this->textInputs.size(); i ++){
+        if (except != this->textInputs[i]){
+            this->textInputs[i]->setFocus(false);
+        }
     }
 }

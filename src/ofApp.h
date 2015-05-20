@@ -52,6 +52,8 @@ private:
     ofxUIToggle* saveImageToggle;
     bool saveImage;
 
+    std::vector<ofxUITextInput*> textInputs;
+
     void saveCurrentImage();
     void fillImageWithWhite( ofImage* image );
     void reset();
@@ -59,6 +61,7 @@ private:
     void applyConfigurationChanges();
     void hideConfigurationPanel();
     void showConfigurationPanel();
+    void unfocusAllTextInputs(ofxUITextInput* except);
 
     const static string CAMERA_WIDTH_LABEL;
     const static string CAMERA_HEIGHT_LABEL;
