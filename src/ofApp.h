@@ -9,7 +9,6 @@ private:
     ofxUICanvas *gui;
     ofxUICanvas *cameraPanel;
     ofxUICanvas *imagePanel;
-    ofxUICanvas *settingsPanel;
 
     ofVideoGrabber* videoGrabber;
     int selectedCameraIndex = 1;

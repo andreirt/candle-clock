@@ -23,9 +23,9 @@ void ofApp::setup(){
     this->videoGrabber = new ofVideoGrabber();
 
     this->gui = new ofxUICanvas(0, 0, ofGetWidth(), ofGetHeight());
-    this->gui->setWidgetSpacing(15);
+    this->gui->setWidgetSpacing(10);
     gui->setFontSize(OFX_UI_FONT_SMALL, 8);
-    gui->setFontSize(OFX_UI_FONT_LARGE, 24);
+    gui->setFontSize(OFX_UI_FONT_LARGE, 18);
 
     ofxUIColor backgroundColor = ofxUIColor::lightCoral;
     ofxUIColor fillColor = ofxUIColor::black;
@@ -40,9 +40,9 @@ void ofApp::setup(){
     this->gui->addLabel("title", "Relógio de Vela", OFX_UI_FONT_LARGE);
     this->gui->addSpacer();
 
-    this->cameraPanel = new ofxUICanvas(0, 0, 330, 280);
+    this->cameraPanel = new ofxUICanvas(0, 0, 300, 260);
     this->cameraPanel->setFontSize(OFX_UI_FONT_SMALL, 8);
-    this->cameraPanel->setWidgetSpacing(15);
+    this->cameraPanel->setWidgetSpacing(10);
     this->gui->addWidgetDown(this->cameraPanel);
 
     // lista as câmeras conectadas a este computador
@@ -97,10 +97,11 @@ void ofApp::setup(){
     this->twoHundredSeventyRotationToggle->setDrawOutline(true);
     this->cameraPanel->addWidgetDown(this->twoHundredSeventyRotationToggle);
 
-    this->imagePanel = new ofxUICanvas(0, 0, 430, 280);
+    this->imagePanel = new ofxUICanvas(320, 0, 430, 260);
     this->imagePanel->setFontSize(OFX_UI_FONT_SMALL, 8);
-    this->imagePanel->setWidgetSpacing(15);
-    this->gui->addWidgetRight(this->imagePanel);
+    this->imagePanel->setWidgetSpacing(10);
+    this->imagePanel->setUIColors( backgroundColor, outline, outlineHighlight, fillColor, fillHightlightColor, paddedColor, paddedOutlineColor );
+    //this->gui->addWidgetRight(this->imagePanel);
 
     this->columns = 1;
 
@@ -140,22 +141,20 @@ void ofApp::setup(){
     ofxUILabel* minutesLabel = new ofxUILabel(170, "minutos", OFX_UI_FONT_SMALL);
     this->imagePanel->addWidgetRight( minutesLabel );
 
-    ofxUILabelButton* clearButton = this->gui->addLabelButton(ofApp::RESET_IMAGE_LABEL, false, 380, 20);
+    ofxUILabelButton* clearButton = this->gui->addLabelButton(ofApp::RESET_IMAGE_LABEL, false, 150, 20);
     clearButton->setDrawFill(true);
     clearButton->setDrawOutline(true);
     this->imagePanel->addWidgetDown( clearButton );
+    this->imagePanel->addSpacer();
 
-    this->settingsPanel = new ofxUICanvas(0, 0, 300, 120);
-    this->settingsPanel->setFontSize(OFX_UI_FONT_SMALL, 8);
-    this->settingsPanel->setWidgetSpacing(15);
-    this->gui->addWidgetRight(this->settingsPanel);
-
-    this->showAtStartupToggle = this->settingsPanel->addToggle("Exibir esta tela ao iniciar", true, 16, 16);
+    this->showAtStartupToggle = this->imagePanel->addToggle("Exibir esta tela ao iniciar", true, 16, 16);
     this->showAtStartupToggle->setDrawOutline(true);
-    this->settingsPanel->addSpacer();
+    this->imagePanel->addSpacer();
 
-    this->fullScreenToggle = this->settingsPanel->addToggle("Tela cheia", true, 16, 16);
+    this->fullScreenToggle = this->imagePanel->addToggle("Tela cheia", true, 16, 16);
     this->fullScreenToggle->setDrawOutline(true);
+
+    this->gui->addWidgetRight(this->imagePanel);
 
     this->gui->addSpacer();
 
@@ -182,7 +181,6 @@ void ofApp::setup(){
     ofAddListener(this->cameraPanel->newGUIEvent, this, &ofApp::cameraPanelEvent);
     ofAddListener(this->imagePanel->newGUIEvent, this, &ofApp::imagePanelEvent);
 
-    this->settingsPanel->loadSettings("settings.xml");
     this->cameraPanel->loadSettings("camera.xml");
     this->imagePanel->loadSettings("image.xml");
 
@@ -409,7 +407,6 @@ void ofApp::guiEvent(ofxUIEventArgs &e)
 
             this->cameraPanel->saveSettings("camera.xml");
             this->imagePanel->saveSettings("image.xml");
-            this->settingsPanel->saveSettings("settings.xml");
             this->applyConfigurationChanges();
             this->reset();
             this->hideConfigurationPanel();
@@ -494,7 +491,6 @@ void ofApp::hideConfigurationPanel()
     this->gui->setVisible(false);
     this->cameraPanel->setVisible(false);
     this->imagePanel->setVisible(false);
-    this->settingsPanel->setVisible(false);
     ofHideCursor();
 }
 
@@ -505,7 +501,6 @@ void ofApp::showConfigurationPanel()
 
     this->cameraPanel->setVisible(true);
     this->imagePanel->setVisible(true);
-    this->settingsPanel->setVisible(true);
     ofShowCursor();
 }
 
