@@ -27,7 +27,7 @@ void ofApp::setup(){
     gui->setFontSize(OFX_UI_FONT_SMALL, 8);
     gui->setFontSize(OFX_UI_FONT_LARGE, 18);
 
-    ofxUIColor backgroundColor = ofxUIColor::lightCoral;
+    ofxUIColor backgroundColor = ofxUIColor::white;
     ofxUIColor fillColor = ofxUIColor::black;
     ofxUIColor fillHightlightColor = ofxUIColor::black;
     ofxUIColor outline = ofxUIColor::black;
@@ -97,11 +97,10 @@ void ofApp::setup(){
     this->twoHundredSeventyRotationToggle->setDrawOutline(true);
     this->cameraPanel->addWidgetDown(this->twoHundredSeventyRotationToggle);
 
-    this->imagePanel = new ofxUICanvas(320, 0, 430, 260);
+    this->imagePanel = new ofxUICanvas(320, 0, 430, 250);
     this->imagePanel->setFontSize(OFX_UI_FONT_SMALL, 8);
     this->imagePanel->setWidgetSpacing(10);
     this->imagePanel->setUIColors( backgroundColor, outline, outlineHighlight, fillColor, fillHightlightColor, paddedColor, paddedOutlineColor );
-    //this->gui->addWidgetRight(this->imagePanel);
 
     this->columns = 1;
 
@@ -186,9 +185,6 @@ void ofApp::setup(){
 
     // reads values from controls and stores them into properties
     this->applyConfigurationChanges();
-
-    ofLog() << "this->columnsTextInput->getTextString(): " << this->columnsTextInput->getTextString();
-    ofLog() << "this->columns: " << this->columns;
 
     if (this->showAtStartup) {
         this->showConfigurationPanel();
@@ -399,8 +395,6 @@ void ofApp::fillImageWithWhite( ofImage* image )
 
 void ofApp::guiEvent(ofxUIEventArgs &e)
 {
-    ofLog() << "e.getName(): " << e.getName();
-
     if (e.getName() == ofApp::SAVE_LABEL) {
         // catches the click when mouse is released, not pressed
         if (!e.getButton()->getValue()) {
@@ -529,8 +523,6 @@ void ofApp::cancelConfigurationChanges()
 
 void ofApp::applyConfigurationChanges()
 {
-    ofLog() << "this->oneHundredEightyRotationToggle->getValue(): " << this->oneHundredEightyRotationToggle->getValue();
-
     if (this->zeroRotationToggle->getValue()) {
         this->rotations = 0;
     }
