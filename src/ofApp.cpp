@@ -19,6 +19,7 @@ const string ofApp::TWO_HUNDRED_SEVENTY_DEGREES_LABEL = "270 graus";
 
 //--------------------------------------------------------------
 void ofApp::setup(){
+    this->selectedCameraIndex = 1;
 
     this->videoGrabber = new ofVideoGrabber();
 

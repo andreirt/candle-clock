@@ -11,7 +11,7 @@ private:
     ofxUICanvas *imagePanel;
 
     ofVideoGrabber* videoGrabber;
-    int selectedCameraIndex = 1;
+    int selectedCameraIndex;
 
     ofImage screenImage;
 
@@ -19,7 +19,7 @@ private:
     int imageHeight;
 
     int currentColumn;
-    float millisecondsPerPixel ;
+    float millisecondsPerPixel;
     float lastTimePixelWasDrawn;
     int x;
     int y;
