@@ -140,3 +140,7 @@
 ################################################################################
 # PROJECT_CXX = 
 # PROJECT_CC = 
+
+ifndef APPNAME
+    APPNAME = Candle_Clock_Linux
+endif
