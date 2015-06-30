@@ -233,7 +233,7 @@ void ofApp::reset()
     this->videoGrabber->initGrabber(this->cameraWidthTextInput->getIntValue(), this->cameraHeightTextInput->getIntValue());
 
     // image to be drawn
-    this->screenImage.allocate(this->cameraWidthTextInput->getIntValue(), this->cameraHeightTextInput->getIntValue(), OF_IMAGE_COLOR_ALPHA);
+    this->screenImage.allocate(this->imageWidth, this->imageHeight, OF_IMAGE_COLOR_ALPHA);
     this->fillImageWithWhite( &this->screenImage );
 
     // check if we have a image to load
