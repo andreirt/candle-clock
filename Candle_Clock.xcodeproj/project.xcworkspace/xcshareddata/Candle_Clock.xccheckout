@@ -22,7 +22,7 @@
 		<key>75DCF5FB00BEB360931C2CE1EAAD05771F23AEB6</key>
 		<string>../..</string>
 		<key>7E804D925461714118DB355C65BC964B41D94376</key>
-		<string>../../../../../addons/ofxUI</string>
+		<string>../../../addons/ofxUI</string>
 	</dict>
 	<key>IDESourceControlProjectURL</key>
 	<string>codebasehq.com:mandelbrot/maquinas-do-tempo/candle-clock-of.git</string>
