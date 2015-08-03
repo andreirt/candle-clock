@@ -445,6 +445,9 @@ void ofApp::guiEvent(ofxUIEventArgs &e)
             this->unfocusAllTextInputs(ti);
         }
     }
+    
+    
+    
 }
 
 void ofApp::cameraPanelEvent(ofxUIEventArgs &e)
