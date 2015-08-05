@@ -9,11 +9,20 @@ private:
     ofxUICanvas *gui;
     ofxUICanvas *cameraPanel;
     ofxUICanvas *imagePanel;
+    
+    std::map<string, string> ptStrings;
+    std::map<string, string> enStrings;
+    std::map<string, string> currentStrings;
+    
+    bool hideButtonReleased;
 
     ofVideoGrabber* videoGrabber;
     int selectedCameraIndex;
 
     ofImage screenImage;
+    
+    int cameraWidth;
+    int cameraHeight;
 
     int imageWidth;
     int imageHeight;
@@ -26,21 +35,61 @@ private:
     int columnWidth;
     int columns;
     int intervalToSaveImage;
+    
+    const static float MAX_STRENGTH_AROUND_PIXEL;
+    const static string SUPPORT_BUTTON_NAME;
+    const static string CHANGE_LOCALE_BUTTON_NAME;
+    
+    const static string ENGLISH_LABEL;
+    const static string PORTUGUESE_LABEL;
+    
+    int currentLocale;
+    const static int LOCALE_ENGLISH = 0;
+    const static int LOCALE_PORTUGUESE = 1;
+    
+    ofxUILabel* titleLabel;
+    ofxUILabelButton* changeLocaleButton;
 
     float lastTimeImageWasSaved;
 
     ofxUIDropDownList* cameraList;
+    
+    ofxUILabel* cameraWidthLabel;
     ofxUITextInput* cameraWidthTextInput;
+    
+    ofxUILabel* cameraHeightLabel;
     ofxUITextInput* cameraHeightTextInput;
+    
+    ofxUILabel* columnsLabel;
     ofxUITextInput* columnsTextInput;
+    
+    ofxUILabel* secondsPerImageLabel;
     ofxUITextInput* secondsPerImageTextInput;
+    
     ofxUITextInput* intervalToSaveTextInput;
-
+    
+    ofxUILabel* imageRotationLabel;
+    
+    ofxUIDropDownList* pickCameraLabel;
+    
     ofxUIToggle* zeroRotationToggle;
     ofxUIToggle* ninetyRotationToggle;
     ofxUIToggle* oneHundredEightyRotationToggle;
     ofxUIToggle* twoHundredSeventyRotationToggle;
     int rotations;
+    
+    ofxUILabel* credits1Label;
+    ofxUILabel* credits2Label;
+    ofxUILabel* credits3Label;
+    ofxUILabel* credits4Label;
+    ofxUILabel* credits5Label;
+    
+    ofxUILabel* minutesLabel;
+    ofxUILabelButton* clearButton;
+    
+    ofxUILabelButton* saveButton;
+    ofxUILabelButton* cancelButton;
+    ofxUILabel* supportLabel;
 
     ofxUIToggle* showAtStartupToggle;
     bool showAtStartup;
@@ -61,21 +110,7 @@ private:
     void hideConfigurationPanel();
     void showConfigurationPanel();
     void unfocusAllTextInputs(ofxUITextInput* except);
-
-    const static string CAMERA_WIDTH_LABEL;
-    const static string CAMERA_HEIGHT_LABEL;
-    const static string COLUMNS_LABEL;
-    const static string SECONDS_PER_IMAGE_LABEL;
-    const static string SAVE_IMAGE_LABEL;
-    const static string SAVE_LABEL;
-    const static string CANCEL_LABEL;
-    const static string RESET_IMAGE_LABEL;
-    const static string SUPPORT_BUTTON_NAME;
-
-    const static string ZERO_DEGREES_LABEL;
-    const static string NINETY_DEGREES_LABEL;
-    const static string ONE_HUNDRED_EIGHTY_DEGREES_LABEL;
-    const static string TWO_HUNDRED_SEVENTY_DEGREES_LABEL;
+    void checkTextInputFocus(ofxUIEventArgs &e);
 
 public:
     void setup();

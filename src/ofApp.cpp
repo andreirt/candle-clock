@@ -1,24 +1,53 @@
 #include "ofApp.h"
 #include <string>
 
-const string ofApp::CAMERA_WIDTH_LABEL = "Largura da câmera";
-const string ofApp::CAMERA_HEIGHT_LABEL = "Altura da câmera";
-const string ofApp::COLUMNS_LABEL = "Colunas";
-const string ofApp::SECONDS_PER_IMAGE_LABEL = "Tempo para completar a imagem (em segundos)";
-const string ofApp::SAVE_IMAGE_LABEL = "Salvar imagem a cada";
-const string ofApp::RESET_IMAGE_LABEL = "Limpar imagem";
-const string ofApp::SUPPORT_BUTTON_NAME = "support";
-const string ofApp::SAVE_LABEL = "Salvar";
-const string ofApp::CANCEL_LABEL = "Cancelar";
+const string ofApp::ENGLISH_LABEL = "English";
+const string ofApp::PORTUGUESE_LABEL = "Portugues";
 
-const string ofApp::ZERO_DEGREES_LABEL = "0 graus";
-const string ofApp::NINETY_DEGREES_LABEL = "90 graus";
-const string ofApp::ONE_HUNDRED_EIGHTY_DEGREES_LABEL = "180 graus";
-const string ofApp::TWO_HUNDRED_SEVENTY_DEGREES_LABEL = "270 graus";
+const float ofApp::MAX_STRENGTH_AROUND_PIXEL = .15;
+const string ofApp::SUPPORT_BUTTON_NAME = "support";
+const string ofApp::CHANGE_LOCALE_BUTTON_NAME = "changeLocale";
 
 
 //--------------------------------------------------------------
 void ofApp::setup(){
+    
+    this->hideButtonReleased = false;
+    this->selectedCameraIndex = 0;
+    this->cameraWidth = 640;
+    this->cameraHeight = 480;
+    this->lastTimeImageWasSaved = 0;
+    this->columns = 0;
+    this->intervalToSaveImage = 15;
+    this->currentLocale = LOCALE_PORTUGUESE;
+    
+    // reads strings.xml
+    ofFile stringsFile;
+    stringsFile.open("strings.xml");
+    ofBuffer stringsBuffer = stringsFile.readToBuffer();
+    
+    ofXml strings;
+    strings.loadFromBuffer( stringsBuffer );
+    strings.setTo("data");
+    
+    int numberOfStrings = strings.getNumChildren();
+    for (int i = 0; i < numberOfStrings; i++) {
+        strings.setToChild(i);
+        
+        string tagName = strings.getName();
+        
+        strings.setTo("pt");
+        this->ptStrings[tagName ] = strings.getValue();
+        
+        strings.setTo("../en");
+        this->enStrings[tagName ] = strings.getValue();
+        strings.setToParent();
+        
+        strings.setToParent();
+    }
+    
+    this->currentStrings = this->ptStrings;
+    
     this->selectedCameraIndex = 1;
 
     this->videoGrabber = new ofVideoGrabber();
@@ -38,7 +67,10 @@ void ofApp::setup(){
 
     this->gui->setUIColors( backgroundColor, outline, outlineHighlight, fillColor, fillHightlightColor, paddedColor, paddedOutlineColor );
 
-    this->gui->addLabel("title", "Relógio de Vela", OFX_UI_FONT_LARGE);
+    this->titleLabel = this->gui->addLabel("title", this->currentStrings["candleclock"], OFX_UI_FONT_LARGE);
+    this->changeLocaleButton = new ofxUILabelButton(ofApp::CHANGE_LOCALE_BUTTON_NAME, true, 200, 30, 500, 10);
+    this->gui->addWidgetRight(this->changeLocaleButton);
+    this->changeLocaleButton->getLabelWidget()->setLabel(ENGLISH_LABEL);
     this->gui->addSpacer();
 
     this->cameraPanel = new ofxUICanvas(0, 0, 300, 260);
@@ -58,7 +90,7 @@ void ofApp::setup(){
         cameras->push_back(device.deviceName);
     }
 
-    this->cameraList = this->cameraPanel->addDropDownList("Escolha a câmera", *cameras, 300, 10);
+    this->pickCameraLabel = this->cameraList = this->cameraPanel->addDropDownList(this->currentStrings["pickCamera"], *cameras, 300, 10);
     this->cameraList->setAllowMultiple(false);
     this->cameraList->setDrawOutline(true);
     this->cameraList->setAutoClose(true);
@@ -74,15 +106,16 @@ void ofApp::setup(){
         labelToggle->setColorBack(ofxUIColor::white);
     }
 
-    this->cameraPanel->addWidgetDown( new ofxUILabel(180, ofApp::CAMERA_WIDTH_LABEL, OFX_UI_FONT_SMALL) );
+    this->cameraWidthLabel = new ofxUILabel(180, this->currentStrings["cameraWidth"], OFX_UI_FONT_SMALL);
+    this->cameraPanel->addWidgetDown( this->cameraWidthLabel );
     this->cameraWidthTextInput = new ofxUITextInput("CameraWidth", "1920", 80, 18) ;
     this->cameraWidthTextInput->setOnlyNumericInput(true);
     this->cameraWidthTextInput->setDrawOutline(true);
     this->cameraWidthTextInput->setDrawOutlineHighLight(true);
     this->cameraPanel->addWidgetRight( cameraWidthTextInput );
     this->textInputs.push_back(this->cameraWidthTextInput);
-
-    ofxUILabel* cameraHeightLabel = new ofxUILabel(180, ofApp::CAMERA_HEIGHT_LABEL, OFX_UI_FONT_SMALL);
+    
+    this->cameraHeightLabel = new ofxUILabel(180, this->currentStrings["cameraHeight"], OFX_UI_FONT_SMALL);
     this->cameraPanel->addWidgetDown( cameraHeightLabel );
     this->cameraHeightTextInput = new ofxUITextInput("CameraHeight", "1080", 80, 18);
     this->cameraHeightTextInput->setOnlyNumericInput(true);
@@ -93,21 +126,21 @@ void ofApp::setup(){
 
     this->rotations = 0;
 
-    this->cameraPanel->addLabel("Rotação da imagem", OFX_UI_FONT_SMALL);
-
-    this->zeroRotationToggle = new ofxUIToggle(ofApp::ZERO_DEGREES_LABEL, true, 16, 16);
+    this->imageRotationLabel = this->cameraPanel->addLabel( this->currentStrings["imageRotation"], OFX_UI_FONT_SMALL);
+    
+    this->zeroRotationToggle = new ofxUIToggle( this->currentStrings["zeroDegress"], true, 16, 16);
     this->zeroRotationToggle->setDrawOutline(true);
     this->cameraPanel->addWidgetDown(this->zeroRotationToggle);
-
-    this->ninetyRotationToggle = new ofxUIToggle(ofApp::NINETY_DEGREES_LABEL, true, 16, 16);
+    
+    this->ninetyRotationToggle = new ofxUIToggle( this->currentStrings["ninetyDegress"], true, 16, 16);
     this->ninetyRotationToggle->setDrawOutline(true);
     this->cameraPanel->addWidgetDown(this->ninetyRotationToggle);
 
-    this->oneHundredEightyRotationToggle = new ofxUIToggle(ofApp::ONE_HUNDRED_EIGHTY_DEGREES_LABEL, true, 16, 16);
+    this->oneHundredEightyRotationToggle = new ofxUIToggle( this->currentStrings["oneHundredEightyDegress"], true, 16, 16);
     this->oneHundredEightyRotationToggle->setDrawOutline(true);
     this->cameraPanel->addWidgetDown(this->oneHundredEightyRotationToggle);
 
-    this->twoHundredSeventyRotationToggle = new ofxUIToggle(ofApp::TWO_HUNDRED_SEVENTY_DEGREES_LABEL, true, 16, 16);
+    this->twoHundredSeventyRotationToggle = new ofxUIToggle( this->currentStrings["twoHundredSeventyDegress"], true, 16, 16);
     this->twoHundredSeventyRotationToggle->setDrawOutline(true);
     this->cameraPanel->addWidgetDown(this->twoHundredSeventyRotationToggle);
 
@@ -118,7 +151,7 @@ void ofApp::setup(){
 
     this->columns = 1;
 
-    ofxUILabel* columnsLabel = new ofxUILabel(170, ofApp::COLUMNS_LABEL, OFX_UI_FONT_SMALL);
+    this->columnsLabel = new ofxUILabel(170, this->currentStrings["columns"], OFX_UI_FONT_SMALL);
     this->imagePanel->addWidgetDown( columnsLabel );
 
     this->columnsTextInput = new ofxUITextInput("columns", "1", 80, 18);
@@ -128,7 +161,7 @@ void ofApp::setup(){
     this->imagePanel->addWidgetRight( this->columnsTextInput );
     this->textInputs.push_back(this->columnsTextInput);
 
-    ofxUILabel* secondsPerImageLabel = new ofxUILabel(390, ofApp::SECONDS_PER_IMAGE_LABEL, OFX_UI_FONT_SMALL);
+    this->secondsPerImageLabel = new ofxUILabel(390, this->currentStrings["secondsPerImage"], OFX_UI_FONT_SMALL);
     this->imagePanel->addWidgetDown( secondsPerImageLabel );
 
     this->secondsPerImageTextInput = new ofxUITextInput("seconds", "360", 80, 18);
@@ -138,56 +171,57 @@ void ofApp::setup(){
     this->imagePanel->addWidgetDown( this->secondsPerImageTextInput );
     this->textInputs.push_back(this->secondsPerImageTextInput);
 
-    this->saveImageToggle = new ofxUIToggle(ofApp::SAVE_IMAGE_LABEL, true, 16, 16);
+    this->saveImageToggle = new ofxUIToggle(this->currentStrings["saveImage"], true, 16, 16);
     this->saveImageToggle->setDrawOutline(true);
     this->imagePanel->addWidgetDown(this->saveImageToggle);
 
     this->intervalToSaveImage = 15;
 
-    this->intervalToSaveTextInput = new ofxUITextInput("A cada", "15", 60, 18);
+    this->intervalToSaveTextInput = new ofxUITextInput(this->currentStrings["each"], "15", 60, 18);
     this->intervalToSaveTextInput->setOnlyNumericInput(true);
     this->intervalToSaveTextInput->setDrawOutline(true);
     this->intervalToSaveTextInput->setDrawOutlineHighLight(true);
     this->imagePanel->addWidgetRight( this->intervalToSaveTextInput );
     this->textInputs.push_back(this->intervalToSaveTextInput);
 
-    ofxUILabel* minutesLabel = new ofxUILabel(170, "minutos", OFX_UI_FONT_SMALL);
+    this->minutesLabel = new ofxUILabel(90, this->currentStrings["minutes"], OFX_UI_FONT_SMALL);
     this->imagePanel->addWidgetRight( minutesLabel );
 
-    ofxUILabelButton* clearButton = this->gui->addLabelButton(ofApp::RESET_IMAGE_LABEL, false, 150, 20);
+    this->clearButton = this->gui->addLabelButton( this->currentStrings["resetImage"], false, 150, 20);
     clearButton->setDrawFill(true);
     clearButton->setDrawOutline(true);
     this->imagePanel->addWidgetDown( clearButton );
     this->imagePanel->addSpacer();
 
-    this->showAtStartupToggle = this->imagePanel->addToggle("Exibir esta tela ao iniciar", true, 16, 16);
+    this->showAtStartupToggle = this->imagePanel->addToggle( this->currentStrings["showAtStartup"], true, 16, 16);
     this->showAtStartupToggle->setDrawOutline(true);
     this->imagePanel->addSpacer();
 
-    this->fullScreenToggle = this->imagePanel->addToggle("Tela cheia", true, 16, 16);
+    this->fullScreenToggle = this->imagePanel->addToggle( this->currentStrings["fullScreen"], true, 16, 16 );
     this->fullScreenToggle->setDrawOutline(true);
 
     this->gui->addWidgetRight(this->imagePanel);
 
     this->gui->addSpacer();
 
-    ofxUILabelButton* saveButton = this->gui->addLabelButton(ofApp::SAVE_LABEL, false, 100, 20);
+    this->saveButton = this->gui->addLabelButton( this->currentStrings["save"], false, 100, 20);
     saveButton->setDrawFill(true);
     saveButton->setDrawOutline(true);
 
-    ofxUILabelButton* cancelButton = new ofxUILabelButton(ofApp::CANCEL_LABEL, false, 100, 20);
+    this->cancelButton = new ofxUILabelButton( this->currentStrings["cancel"], false, 100, 20);
     cancelButton->setDrawFill(true);
     cancelButton->setDrawOutline(true);
     this->gui->addWidgetRight(cancelButton);
     this->gui->addSpacer();
 
-    this->gui->addLabel("Relógio de Vela - Andrei Thomaz, 2015");
-    this->gui->addLabel("Integrante do projeto Máquinas do Tempo, desenvolvido com apoio da Bolsa de Artes Visual da Funarte 2014");
-    this->gui->addLabel("Desenvolvido em C++ / OpenFrameworks e distribuído sob a licença MPL");
-    this->gui->addLabel("Programação por Andrei Thomaz e Vitor Andrioli");
+    this->credits1Label = this->gui->addLabel( this->currentStrings["credits1"], OFX_UI_FONT_SMALL );
+    this->credits2Label = this->gui->addLabel( this->currentStrings["credits2"], OFX_UI_FONT_SMALL );
+    this->credits3Label = this->gui->addLabel( this->currentStrings["credits3"], OFX_UI_FONT_SMALL );
+    this->credits4Label = this->gui->addLabel( this->currentStrings["credits4"], OFX_UI_FONT_SMALL );
+    this->credits5Label = this->gui->addLabel( this->currentStrings["credits5"], OFX_UI_FONT_SMALL );
     this->gui->addSpacer();
 
-    this->gui->addLabel("Realização");
+    this->supportLabel = this->gui->addLabel( this->currentStrings["support"] );
     this->gui->addImageButton(ofApp::SUPPORT_BUTTON_NAME, "funarte.png", false, 509, 60);
 
     ofAddListener(this->gui->newGUIEvent, this, &ofApp::guiEvent);
@@ -410,26 +444,26 @@ void ofApp::fillImageWithWhite( ofImage* image )
 
 void ofApp::guiEvent(ofxUIEventArgs &e)
 {
-    if (e.getName() == ofApp::SAVE_LABEL) {
+    if (e.getName() == this->ptStrings["save"]) {
         // catches the click when mouse is released, not pressed
         if (!e.getButton()->getValue()) {
-
+            
             this->cameraPanel->saveSettings("camera.xml");
             this->imagePanel->saveSettings("image.xml");
             this->gui->saveSettings("settings.xml");
             this->applyConfigurationChanges();
             this->reset();
             this->hideConfigurationPanel();
-
+            
         }
     }
-    else if (e.getName() == ofApp::CANCEL_LABEL) {
+    else if (e.getName() == this->ptStrings["cancel"]) {
         // catches the click when mouse is released, not pressed
         if (!e.getButton()->getValue()) {
-
+            
             this->cancelConfigurationChanges();
             this->hideConfigurationPanel();
-
+            
         }
     }
     else if (e.getName() == ofApp::SUPPORT_BUTTON_NAME) {
@@ -438,59 +472,111 @@ void ofApp::guiEvent(ofxUIEventArgs &e)
             ofLaunchBrowser("http://www.funarte.gov.br/");
         }
     }
-
+    else if (e.getName() == ofApp::CHANGE_LOCALE_BUTTON_NAME) {
+        // catches the click when mouse is released, not pressed
+        if (!e.getButton()->getValue()) {
+            if (this->currentLocale == LOCALE_ENGLISH) {
+                this->currentLocale = LOCALE_PORTUGUESE;
+                this->currentStrings = this->ptStrings;
+            }
+            else {
+                this->currentLocale = LOCALE_ENGLISH;
+                this->currentStrings = this->enStrings;
+            }
+            
+            this->titleLabel->setLabel( this->currentStrings["candleclock"] );
+            if (this->currentLocale == LOCALE_ENGLISH) {
+                this->changeLocaleButton->getLabelWidget()->setLabel(PORTUGUESE_LABEL);
+            }
+            else {
+                this->changeLocaleButton->getLabelWidget()->setLabel(ENGLISH_LABEL);
+            }
+            
+            
+            this->pickCameraLabel->setLabelText( this->currentStrings["pickCamera"] );
+            this->cameraWidthLabel->setLabel( this->currentStrings["cameraWidth"] );
+            this->cameraHeightLabel->setLabel( this->currentStrings["cameraHeight"] );
+            
+            this->saveButton->setLabelText( this->currentStrings["save"] );
+            this->cancelButton->setLabelText( this->currentStrings["cancel"] );
+            
+            this->credits1Label->setLabel( this->currentStrings["credits1"] );
+            this->credits2Label->setLabel( this->currentStrings["credits2"] );
+            this->credits3Label->setLabel( this->currentStrings["credits3"] );
+            this->credits4Label->setLabel( this->currentStrings["credits4"] );
+            this->credits5Label->setLabel( this->currentStrings["credits5"] );
+            
+            this->zeroRotationToggle->getLabelWidget()->setLabel( this->currentStrings["zeroDegress"] );
+            this->ninetyRotationToggle->getLabelWidget()->setLabel( this->currentStrings["ninetyDegress"] );
+            this->oneHundredEightyRotationToggle->getLabelWidget()->setLabel( this->currentStrings["oneHundredEightyDegress"] );
+            this->twoHundredSeventyRotationToggle->getLabelWidget()->setLabel( this->currentStrings["twoHundredSeventyDegress"] );
+            
+            this->imageRotationLabel->setLabel( this->currentStrings["imageRotation"]);
+            this->secondsPerImageLabel->setLabel( this->currentStrings["secondsPerImage"] );
+            this->columnsLabel->setLabel( this->currentStrings["columns"] );
+            this->minutesLabel->setLabel( this->currentStrings["minutes"] );
+            this->clearButton->setLabelText( this->currentStrings["resetImage"] );
+            
+            this->saveImageToggle->getLabelWidget()->setLabel( this->currentStrings["saveImage"] );
+            this->showAtStartupToggle->getLabelWidget()->setLabel( this->currentStrings["showAtStartup"] );
+            this->fullScreenToggle->getLabelWidget()->setLabel( this->currentStrings["fullScreen"] );
+            
+            this->supportLabel->setLabel( this->currentStrings["support"] );
+            
+        }
+        
+    }
     if (e.getKind() == OFX_UI_WIDGET_TEXTINPUT){
         ofxUITextInput *ti = (ofxUITextInput *) e.widget;
         if (ti->getInputTriggerType() == OFX_UI_TEXTINPUT_ON_FOCUS){
             this->unfocusAllTextInputs(ti);
         }
     }
-    
-    
-    
 }
 
 void ofApp::cameraPanelEvent(ofxUIEventArgs &e)
 {
-    if (e.getName() == ofApp::ZERO_DEGREES_LABEL && e.getToggle()->getValue()) {
+    if (e.getName() == this->ptStrings["zeroDegress"] && e.getToggle()->getValue()) {
         this->ninetyRotationToggle->setValue(false);
         this->oneHundredEightyRotationToggle->setValue(false);
         this->twoHundredSeventyRotationToggle->setValue(false);
     }
-    else if (e.getName() == ofApp::NINETY_DEGREES_LABEL && e.getToggle()->getValue()) {
+    else if (e.getName() == this->ptStrings["ninetyDegress"] && e.getToggle()->getValue()) {
         this->zeroRotationToggle->setValue(false);
         this->oneHundredEightyRotationToggle->setValue(false);
         this->twoHundredSeventyRotationToggle->setValue(false);
     }
-    else if (e.getName() == ofApp::ONE_HUNDRED_EIGHTY_DEGREES_LABEL && e.getToggle()->getValue()) {
+    else if (e.getName() == this->ptStrings["oneHundredEightyDegress"] && e.getToggle()->getValue()) {
         this->zeroRotationToggle->setValue(false);
         this->ninetyRotationToggle->setValue(false);
         this->twoHundredSeventyRotationToggle->setValue(false);
     }
-    else if (e.getName() == ofApp::TWO_HUNDRED_SEVENTY_DEGREES_LABEL && e.getToggle()->getValue()) {
+    else if (e.getName() == this->ptStrings["twoHundredSeventyDegress"] && e.getToggle()->getValue()) {
         this->zeroRotationToggle->setValue(false);
         this->ninetyRotationToggle->setValue(false);
         this->oneHundredEightyRotationToggle->setValue(false);
     }
-
-    if (e.getKind() == OFX_UI_WIDGET_TEXTINPUT){
-        ofxUITextInput *ti = (ofxUITextInput *) e.widget;
-        if (ti->getInputTriggerType() == OFX_UI_TEXTINPUT_ON_FOCUS){
-            this->unfocusAllTextInputs(ti);
-        }
+    else {
+        this->checkTextInputFocus(e);
     }
 }
 
 void ofApp::imagePanelEvent(ofxUIEventArgs &e)
 {
-    if (e.getName() == ofApp::RESET_IMAGE_LABEL) {
+    if (e.getName() == this->ptStrings["resetImage"]) {
         // catches the click when mouse is released, not pressed
         if (!e.getButton()->getValue()) {
             this->fillImageWithWhite( &this->screenImage );
-            this->screenImage.saveImage("candle_clock.png");
+            this->screenImage.saveImage("hourglass.png");
         }
     }
+    else {
+        this->checkTextInputFocus(e);
+    }
+}
 
+void ofApp::checkTextInputFocus(ofxUIEventArgs &e)
+{
     if (e.getKind() == OFX_UI_WIDGET_TEXTINPUT){
         ofxUITextInput *ti = (ofxUITextInput *) e.widget;
         if (ti->getInputTriggerType() == OFX_UI_TEXTINPUT_ON_FOCUS){
