@@ -1,3 +1,2 @@
-ofxEdsdk
-ofxImGui
+ofxImGui-master
 ofxXmlSettings
