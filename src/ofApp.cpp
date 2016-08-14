@@ -98,26 +98,31 @@ void ofApp::update(){
         this->lastTimePixelWasDrawn += this->millisecondsPerPixel;
             
         ++this->x;
-        if (this->x == (this->currentColumn + 1) * this->columnWidth) {
+        if (this->x >= (this->currentColumn + 1) * this->columnWidth) {
             this->x = this->currentColumn * this->columnWidth;
             ++this->y;
             
-            if (this->y == this->imageHeight) {
+            if (this->y >= this->imageHeight) {
                 ++this->currentColumn;
                 this->x = this->currentColumn * this->columnWidth;
                 this->y = 0;
+
+				// saves finished column / image
+				this->saveCurrentImage();
                 
                 if (this->currentColumn == this->columns) {
                     this->x = 0;
                     this->currentColumn = 0;
                     
                     ofResetElapsedTimeCounter();
-                    lastTimePixelWasDrawn = 0;
-                    now = 0;
-                }
-                    
-                // saves finished column / image
-                this->saveCurrentImage();
+
+					this->lastTimePixelWasDrawn = 0;
+					this->lastTimePhotoWasTaken = 0;
+					this->lastTimeImageWasSaved = 0;
+					break;
+
+                }                    
+                
             }
         }
     }
@@ -238,21 +243,10 @@ void ofApp::keyPressed(int key){
 //--------------------------------------------------------------
 void ofApp::reset(){
     // image to be drawn
-    this->screenImage.allocate(this->imageWidth, this->imageHeight, OF_IMAGE_COLOR_ALPHA);
+	if (!this->screenImage.isAllocated()) {
+		this->screenImage.allocate(this->imageWidth, this->imageHeight, OF_IMAGE_COLOR_ALPHA);
+	}
     this->fillImageWithWhite( &this->screenImage );
-    
-    //bool imageLoaded = false;
-    //if (imageLoaded == previousImage.load("hourglass.png")) {
-    
-    // check if we have a image to load
-    ofImage previousImage;
-    if(previousImage.load("hourglass.png")) {
-        
-        if (previousImage.getWidth() == this->screenImage.getWidth() && previousImage.getHeight() == this->screenImage.getHeight()) {
-            
-            this->screenImage = previousImage;
-        }
-    }
     
     this->columnWidth = this->imageWidth / this->columns;
     float numberOfPixels = this->cameraWidth * this->cameraHeight;
