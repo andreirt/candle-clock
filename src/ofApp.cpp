@@ -1,257 +1,272 @@
 #include "ofApp.h"
-#include <string>
+#include<string>
 
-const string ofApp::CAMERA_WIDTH_LABEL = "Largura da câmera";
-const string ofApp::CAMERA_HEIGHT_LABEL = "Altura da câmera";
-const string ofApp::COLUMNS_LABEL = "Colunas";
-const string ofApp::SECONDS_PER_IMAGE_LABEL = "Tempo para completar a imagem (em segundos)";
-const string ofApp::SAVE_IMAGE_LABEL = "Salvar imagem a cada";
-const string ofApp::RESET_IMAGE_LABEL = "Limpar imagem";
-const string ofApp::SUPPORT_BUTTON_NAME = "support";
-const string ofApp::SAVE_LABEL = "Salvar";
-const string ofApp::CANCEL_LABEL = "Cancelar";
+const string ofApp::ENGLISH_LABEL = "English";
+const string ofApp::PORTUGUESE_LABEL = "Português";
 
-const string ofApp::ZERO_DEGREES_LABEL = "0 graus";
-const string ofApp::NINETY_DEGREES_LABEL = "90 graus";
-const string ofApp::ONE_HUNDRED_EIGHTY_DEGREES_LABEL = "180 graus";
-const string ofApp::TWO_HUNDRED_SEVENTY_DEGREES_LABEL = "270 graus";
+const float  ofApp::MAX_STRENGTH_AROUND_PIXEL = .15;
+const string ofApp::CHANGE_LOCALE_BUTTON_NAME = "changeLocale";
 
+int ofApp::intervalToSaveImage = 15;
+int ofApp::degreesButtonValue = 0;
+int ofApp::currentResolution = 2;
+int ofApp::columns = 1;
+int ofApp::secondsPerImage = 360;
+bool ofApp::saveImageToggle = false;
+bool ofApp::showAtStartup = true;
+bool ofApp::fullscreen = true;
+bool ofApp::configurationPanelShow = true;
 
 //--------------------------------------------------------------
 void ofApp::setup(){
-    this->selectedCameraIndex = 1;
-
-    this->videoGrabber = new ofVideoGrabber();
-
-    this->gui = new ofxUICanvas(0, 0, ofGetWidth(), ofGetHeight());
-    this->gui->setWidgetSpacing(10);
-    gui->setFontSize(OFX_UI_FONT_SMALL, 8);
-    gui->setFontSize(OFX_UI_FONT_LARGE, 18);
-
-    ofxUIColor backgroundColor = ofxUIColor::white;
-    ofxUIColor fillColor = ofxUIColor::black;
-    ofxUIColor fillHightlightColor = ofxUIColor::black;
-    ofxUIColor outline = ofxUIColor::black;
-    ofxUIColor outlineHighlight = ofxUIColor::red;
-    ofxUIColor paddedColor = ofxUIColor::blue;
-    ofxUIColor paddedOutlineColor = ofxUIColor::orange;
-
-    this->gui->setUIColors( backgroundColor, outline, outlineHighlight, fillColor, fillHightlightColor, paddedColor, paddedOutlineColor );
-
-    this->gui->addLabel("title", "Relógio de Vela", OFX_UI_FONT_LARGE);
-    this->gui->addSpacer();
-
-    this->cameraPanel = new ofxUICanvas(0, 0, 300, 260);
-    this->cameraPanel->setUIColors( backgroundColor, outline, outlineHighlight, fillColor, fillHightlightColor, paddedColor, paddedOutlineColor );
-    this->cameraPanel->setFontSize(OFX_UI_FONT_SMALL, 8);
-    this->cameraPanel->setWidgetSpacing(10);
-    this->gui->addWidgetDown(this->cameraPanel);
-
-    // lista as câmeras conectadas a este computador
-    vector< ofVideoDevice > devices = this->videoGrabber->listDevices();
-
-    vector<string> *cameras = new vector<string>();
-    vector<ofVideoDevice>::iterator it;
-
-    for (it = devices.begin(); it != devices.end(); ++it) {
-        ofVideoDevice device = *it;
-        cameras->push_back(device.deviceName);
-    }
-
-    this->cameraList = this->cameraPanel->addDropDownList("Escolha a câmera", *cameras, 300, 10);
-    this->cameraList->setAllowMultiple(false);
-    this->cameraList->setDrawOutline(true);
-    this->cameraList->setAutoClose(true);
-
-    vector<ofxUILabelToggle *> toggles = this->cameraList->getToggles();
-    vector<ofxUILabelToggle *>::iterator togglesIterator;
-
-    for (togglesIterator = toggles.begin(); togglesIterator != toggles.end(); ++togglesIterator) {
-        ofxUILabelToggle* labelToggle = *togglesIterator;
-        labelToggle->setColorFillHighlight(ofxUIColor::black);
-        labelToggle->setColorFill(ofxUIColor::white);
-        labelToggle->setColorOutlineHighlight(ofxUIColor::black);
-        labelToggle->setColorBack(ofxUIColor::white);
-    }
-
-    this->cameraPanel->addWidgetDown( new ofxUILabel(180, ofApp::CAMERA_WIDTH_LABEL, OFX_UI_FONT_SMALL) );
-    this->cameraWidthTextInput = new ofxUITextInput("CameraWidth", "1920", 80, 18) ;
-    this->cameraWidthTextInput->setOnlyNumericInput(true);
-    this->cameraWidthTextInput->setDrawOutline(true);
-    this->cameraWidthTextInput->setDrawOutlineHighLight(true);
-    this->cameraPanel->addWidgetRight( cameraWidthTextInput );
-    this->textInputs.push_back(this->cameraWidthTextInput);
-
-    ofxUILabel* cameraHeightLabel = new ofxUILabel(180, ofApp::CAMERA_HEIGHT_LABEL, OFX_UI_FONT_SMALL);
-    this->cameraPanel->addWidgetDown( cameraHeightLabel );
-    this->cameraHeightTextInput = new ofxUITextInput("CameraHeight", "1080", 80, 18);
-    this->cameraHeightTextInput->setOnlyNumericInput(true);
-    this->cameraHeightTextInput->setDrawOutline(true);
-    this->cameraHeightTextInput->setDrawOutlineHighLight(true);
-    this->cameraPanel->addWidgetRight( this->cameraHeightTextInput );
-    this->textInputs.push_back(this->cameraHeightTextInput);
-
+    gui = new ofxImGui;
+    gui->setup();
+    imageButtonID = gui->loadImage("funarte.png");
+    this->imageWidth = 800;
+    this->imageHeight = 600;
+    this->lastTimeImageWasSaved = 0;
     this->rotations = 0;
-
-    this->cameraPanel->addLabel("Rotação da imagem", OFX_UI_FONT_SMALL);
-
-    this->zeroRotationToggle = new ofxUIToggle(ofApp::ZERO_DEGREES_LABEL, true, 16, 16);
-    this->zeroRotationToggle->setDrawOutline(true);
-    this->cameraPanel->addWidgetDown(this->zeroRotationToggle);
-
-    this->ninetyRotationToggle = new ofxUIToggle(ofApp::NINETY_DEGREES_LABEL, true, 16, 16);
-    this->ninetyRotationToggle->setDrawOutline(true);
-    this->cameraPanel->addWidgetDown(this->ninetyRotationToggle);
-
-    this->oneHundredEightyRotationToggle = new ofxUIToggle(ofApp::ONE_HUNDRED_EIGHTY_DEGREES_LABEL, true, 16, 16);
-    this->oneHundredEightyRotationToggle->setDrawOutline(true);
-    this->cameraPanel->addWidgetDown(this->oneHundredEightyRotationToggle);
-
-    this->twoHundredSeventyRotationToggle = new ofxUIToggle(ofApp::TWO_HUNDRED_SEVENTY_DEGREES_LABEL, true, 16, 16);
-    this->twoHundredSeventyRotationToggle->setDrawOutline(true);
-    this->cameraPanel->addWidgetDown(this->twoHundredSeventyRotationToggle);
-
-    this->imagePanel = new ofxUICanvas(320, 0, 430, 250);
-    this->imagePanel->setFontSize(OFX_UI_FONT_SMALL, 8);
-    this->imagePanel->setWidgetSpacing(10);
-    this->imagePanel->setUIColors( backgroundColor, outline, outlineHighlight, fillColor, fillHightlightColor, paddedColor, paddedOutlineColor );
-
-    this->columns = 1;
-
-    ofxUILabel* columnsLabel = new ofxUILabel(170, ofApp::COLUMNS_LABEL, OFX_UI_FONT_SMALL);
-    this->imagePanel->addWidgetDown( columnsLabel );
-
-    this->columnsTextInput = new ofxUITextInput("columns", "1", 80, 18);
-    this->columnsTextInput->setOnlyNumericInput(true);
-    this->columnsTextInput->setDrawOutline(true);
-    this->columnsTextInput->setDrawOutlineHighLight(true);
-    this->imagePanel->addWidgetRight( this->columnsTextInput );
-    this->textInputs.push_back(this->columnsTextInput);
-
-    ofxUILabel* secondsPerImageLabel = new ofxUILabel(390, ofApp::SECONDS_PER_IMAGE_LABEL, OFX_UI_FONT_SMALL);
-    this->imagePanel->addWidgetDown( secondsPerImageLabel );
-
-    this->secondsPerImageTextInput = new ofxUITextInput("seconds", "360", 80, 18);
-    this->secondsPerImageTextInput->setOnlyNumericInput(true);
-    this->secondsPerImageTextInput->setDrawOutline(true);
-    this->secondsPerImageTextInput->setDrawOutlineHighLight(true);
-    this->imagePanel->addWidgetDown( this->secondsPerImageTextInput );
-    this->textInputs.push_back(this->secondsPerImageTextInput);
-
-    this->saveImageToggle = new ofxUIToggle(ofApp::SAVE_IMAGE_LABEL, true, 16, 16);
-    this->saveImageToggle->setDrawOutline(true);
-    this->imagePanel->addWidgetDown(this->saveImageToggle);
-
-    this->intervalToSaveImage = 15;
-
-    this->intervalToSaveTextInput = new ofxUITextInput("A cada", "15", 60, 18);
-    this->intervalToSaveTextInput->setOnlyNumericInput(true);
-    this->intervalToSaveTextInput->setDrawOutline(true);
-    this->intervalToSaveTextInput->setDrawOutlineHighLight(true);
-    this->imagePanel->addWidgetRight( this->intervalToSaveTextInput );
-    this->textInputs.push_back(this->intervalToSaveTextInput);
-
-    ofxUILabel* minutesLabel = new ofxUILabel(170, "minutos", OFX_UI_FONT_SMALL);
-    this->imagePanel->addWidgetRight( minutesLabel );
-
-    ofxUILabelButton* clearButton = this->gui->addLabelButton(ofApp::RESET_IMAGE_LABEL, false, 150, 20);
-    clearButton->setDrawFill(true);
-    clearButton->setDrawOutline(true);
-    this->imagePanel->addWidgetDown( clearButton );
-    this->imagePanel->addSpacer();
-
-    this->showAtStartupToggle = this->imagePanel->addToggle("Exibir esta tela ao iniciar", true, 16, 16);
-    this->showAtStartupToggle->setDrawOutline(true);
-    this->imagePanel->addSpacer();
-
-    this->fullScreenToggle = this->imagePanel->addToggle("Tela cheia", true, 16, 16);
-    this->fullScreenToggle->setDrawOutline(true);
-
-    this->gui->addWidgetRight(this->imagePanel);
-
-    this->gui->addSpacer();
-
-    ofxUILabelButton* saveButton = this->gui->addLabelButton(ofApp::SAVE_LABEL, false, 100, 20);
-    saveButton->setDrawFill(true);
-    saveButton->setDrawOutline(true);
-
-    ofxUILabelButton* cancelButton = new ofxUILabelButton(ofApp::CANCEL_LABEL, false, 100, 20);
-    cancelButton->setDrawFill(true);
-    cancelButton->setDrawOutline(true);
-    this->gui->addWidgetRight(cancelButton);
-    this->gui->addSpacer();
-
-    this->gui->addLabel("Relógio de Vela - Andrei Thomaz, 2015");
-    this->gui->addLabel("Integrante do projeto Máquinas do Tempo, desenvolvido com apoio da Bolsa de Artes Visual da Funarte 2014");
-    this->gui->addLabel("Desenvolvido em C++ / OpenFrameworks e distribuído sob a licença MPL");
-    this->gui->addLabel("Programação por Andrei Thomaz e Vitor Andrioli");
-    this->gui->addSpacer();
-
-    this->gui->addLabel("Realização");
-    this->gui->addImageButton(ofApp::SUPPORT_BUTTON_NAME, "funarte.png", false, 509, 60);
-
-    ofAddListener(this->gui->newGUIEvent, this, &ofApp::guiEvent);
-    ofAddListener(this->cameraPanel->newGUIEvent, this, &ofApp::cameraPanelEvent);
-    ofAddListener(this->imagePanel->newGUIEvent, this, &ofApp::imagePanelEvent);
-
-    this->cameraPanel->loadSettings("camera.xml");
-    this->imagePanel->loadSettings("image.xml");
-    this->gui->loadSettings("settings");
-
-    // reads values from controls and stores them into properties
+    this->selectedCameraIndex = 0;
+    this->currentLocale = LOCALE_ENGLISH;
+    this->changeLocaleLabel = PORTUGUESE_LABEL;
+    this->videoGrabber = new ofVideoGrabber();
+    
+    this->loadXmlSettings();
+    
+    ofFile stringsFile;
+    stringsFile.open("strings.xml");
+    ofBuffer stringsBuffer = stringsFile.readToBuffer();
+    ofXml strings;
+    strings.loadFromBuffer( stringsBuffer );
+    strings.setTo("data");
+    int numberOfStrings = strings.getNumChildren();
+    for (int i = 0; i < numberOfStrings; i++) {
+        strings.setToChild(i);
+        
+        string tagName = strings.getName();
+        
+        strings.setTo("pt");
+        this->ptStrings[tagName ] = strings.getValue();
+        
+        strings.setTo("../en");
+        this->enStrings[tagName ] = strings.getValue();
+        strings.setToParent();
+        
+        strings.setToParent();
+    }
+    this->currentStrings = this->enStrings;
+    
+    this->selectResolution();
     this->applyConfigurationChanges();
-
+    
     if (this->showAtStartup) {
         this->showConfigurationPanel();
     }
     else {
         this->hideConfigurationPanel();
     }
-
+    
     this->reset();
 }
-
-void ofApp::reset()
-{
-    if (this->videoGrabber != NULL) {
+//--------------------------------------------------------------
+void ofApp::update(){
+    this->videoGrabber->update();
+    
+    if (this->configurationPanelShow == true) {
+        ofShowCursor();
+        return;
+    }
+    
+    if (this->videoGrabber->isFrameNew()) {
+        ofPixels pixels = this->videoGrabber->getPixels();
+        
+        pixels.rotate90( this->rotations );
+        
+        float now = ofGetElapsedTimeMillis();
+        while (this->lastTimePixelWasDrawn < now) {
+            
+            ofColor c = pixels.getColor( this->x, this->y );
+            this->screenImage.setColor( this->x, this->y, c );
+            this->lastTimePixelWasDrawn += this->millisecondsPerPixel;
+            
+            ++this->x;
+            if (this->x == (this->currentColumn + 1) * this->columnWidth) {
+                this->x = this->currentColumn * this->columnWidth;
+                ++this->y;
+                
+                if (this->y == this->imageHeight) {
+                    ++this->currentColumn;
+                    this->x = this->currentColumn * this->columnWidth;
+                    this->y = 0;
+                    
+                    if (this->currentColumn == this->columns) {
+                        this->x = 0;
+                        this->currentColumn = 0;
+                    }
+                    
+                    // saves finished column / image
+                    this->saveCurrentImage();
+                }
+            }
+        }
+        
+        this->screenImage.update();
+        
+        if (ofGetElapsedTimef() - this->lastTimeImageWasSaved > this->intervalToSaveImage * 60) {
+            this->saveCurrentImage();
+            this->lastTimeImageWasSaved = ofGetElapsedTimef();
+        }
+    }
+}
+//--------------------------------------------------------------
+void ofApp::draw(){
+    // We scale the image so it covers all the screen.
+    // The image is croppred if necessary.
+    float hScale = (float) ofGetWidth() / (float) this->screenImage.getWidth();
+    float vScale = (float) ofGetHeight() / (float) this->screenImage.getHeight();
+    
+    float scale = max(hScale, vScale);
+    
+    int scaledWidth = (int) roundf((float) this->screenImage.getWidth() * scale);
+    int scaledHeight = (int) roundf((float) this->screenImage.getHeight() * scale);
+    
+    int x = (ofGetWidth() - scaledWidth) / 2;
+    int y = (ofGetHeight() - scaledHeight) / 2;
+    
+    this->screenImage.draw(x, y, scaledWidth, scaledHeight);
+    
+    //Interface
+    if(configurationPanelShow == true){
+        gui->begin();
+        ImGui::SetNextWindowSize(ofVec2f(800,500));
+        ImGui::SetNextWindowPos(ImVec2(0, 0));
+        ImGui::Begin(this->currentStrings["candleclock"].c_str());
+        //ImGui::Text(this->currentStrings["candleclock"].c_str());
+        if(ImGui::Button(this->changeLocaleLabel.c_str())){
+            this->changeLocale();
+        }
+        
+        vector< ofVideoDevice > devices = this->videoGrabber->listDevices();
+        vector<string> *cameras = new vector<string>();
+        vector<ofVideoDevice>::iterator it;
+        
+        for (it = devices.begin(); it != devices.end(); ++it) {
+            ofVideoDevice device = *it;
+            cameras->push_back(device.deviceName);
+        }
+        
+        char* nameDevices = (char*) malloc(512 * cameras->size());
+        char* current = nameDevices;
+        for (int i = 0; i < cameras->size(); i++) {
+            strcpy(current, cameras->at(i).c_str());
+            current += strlen(cameras->at(i).c_str());
+            *current = '\0';
+            ++current;
+        }
+        ImGui::PushItemWidth(200);
+        ImGui::Combo(this->currentStrings["pickCamera"].c_str(), &selectedCameraIndex, nameDevices, cameras->size());
+        free(nameDevices);
+        ImGui::PushItemWidth(100);
+        ImGui::Combo(this->currentStrings["deviceResolution"].c_str(), &currentResolution, deviceResolution, 3);
+        ImGui::Text(this->currentStrings["imageRotation"].c_str());
+        ImGui::RadioButton(this->currentStrings["zeroDegress"].c_str(), &degreesButtonValue, 0); ImGui::SameLine();
+        ImGui::RadioButton(this->currentStrings["ninetyDegress"].c_str(), &degreesButtonValue, 1); ImGui::SameLine();
+        ImGui::RadioButton(this->currentStrings["oneHundredEightyDegress"].c_str(), &degreesButtonValue, 2); ImGui::SameLine();
+        ImGui::RadioButton(this->currentStrings["twoHundredSeventyDegress"].c_str(), &degreesButtonValue, 3);
+        ImGui::PushItemWidth(100);
+        ImGui::SliderInt(this->currentStrings["columns"].c_str(),&columns, 1, 15);
+        ImGui::SliderInt(this->currentStrings["secondsPerImage"].c_str(), &secondsPerImage, 1, 100);
+        ImGui::Checkbox(this->currentStrings["saveImage"].c_str(), &saveImageToggle); ImGui::SameLine();
+        ImGui::PushItemWidth(100);
+        ImGui::SliderInt(this->currentStrings["minutes"].c_str(), &intervalToSaveImage, 1, 60);
+        
+        if(ImGui::Button(this->currentStrings["resetImage"].c_str())){
+            this->fillImageWithWhite( &this->screenImage );
+            this->screenImage.save("candle_clock.png");
+        }
+        
+        ImGui::Checkbox(this->currentStrings["showAtStartup"].c_str(), &showAtStartup);
+        ImGui::Checkbox(this->currentStrings["fullScreen"].c_str(), &fullscreen);
+        
+        if(ImGui::Button(this->currentStrings["save"].c_str())){
+            this->saveXmlSettings();
+            this->applyConfigurationChanges();
+            this->reset();
+            this->hideConfigurationPanel();
+        }
+        ImGui::SameLine();
+        if(ImGui::Button(this->currentStrings["cancel"].c_str())){
+            this->cancelConfigurationChanges();
+            this->hideConfigurationPanel();
+        }
+        
+        ImGui::Text(this->currentStrings["credits1"].c_str());
+        ImGui::Text(this->currentStrings["credits2"].c_str());
+        ImGui::Text(this->currentStrings["credits3"].c_str());
+        ImGui::Text(this->currentStrings["credits4"].c_str());
+        ImGui::Text(this->currentStrings["credits5"].c_str());
+        ImGui::Text(this->currentStrings["support"].c_str());
+        if(ImGui::ImageButton((ImTextureID)(uintptr_t)imageButtonID, ImVec2(509, 60))){
+            ofLaunchBrowser("http://www.funarte.gov.br/");
+        }
+        
+        setFullscreen();
+        selectResolution();
+        
+        ImGui::End();
+        gui->end();
+    }
+}
+//--------------------------------------------------------------
+void ofApp::keyPressed(int key){
+    if (key == OF_KEY_TAB) {
+        
+        if (this->configurationPanelShow == true) {
+            this->hideConfigurationPanel();
+        }
+        else {
+            this->showConfigurationPanel();
+        }
+    }
+}
+//--------------------------------------------------------------
+void ofApp::reset(){
+    if (this->videoGrabber != nullptr) {
         if (this->videoGrabber->isInitialized()) {
             this->videoGrabber->close();
             delete this->videoGrabber;
             this->videoGrabber = new ofVideoGrabber();
         }
     }
-
+    
     // set camera
-    vector<int> selectedCamera = this->cameraList->getSelectedIndeces();
-    if (selectedCamera.size() > 0) {
-        this->videoGrabber->setDeviceID( selectedCamera[0] );
+    if (selectedCameraIndex > 0) {
+        this->videoGrabber->setDeviceID( selectedCameraIndex );
     }
     else {
         this->videoGrabber->setDeviceID( 0 );
     }
-
-    this->videoGrabber->setDesiredFrameRate(30);
-    this->videoGrabber->initGrabber(this->cameraWidthTextInput->getIntValue(), this->cameraHeightTextInput->getIntValue());
-
+    
+    //  this->videoGrabber->setDesiredFrameRate(30);
+    this->videoGrabber->initGrabber(this->cameraWidth, this->cameraHeight);
+    
     // image to be drawn
     this->screenImage.allocate(this->imageWidth, this->imageHeight, OF_IMAGE_COLOR_ALPHA);
     this->fillImageWithWhite( &this->screenImage );
-
+    
     // check if we have a image to load
     ofImage previousImage;
-    if (previousImage.loadImage("candle_clock.png")) {
-
+    if (previousImage.load("candle_clock.png")) {
+        
         if (previousImage.getWidth() == this->screenImage.getWidth() && previousImage.getHeight() == this->screenImage.getHeight()) {
-
+            
             this->screenImage = previousImage;
-
         }
-
     }
-
+    
     this->columnWidth = this->imageWidth / this->columns;
-    float numberOfPixels = this->cameraWidthTextInput->getIntValue() * this->cameraHeightTextInput->getIntValue();
-    float numberOfMilisseconds = this->secondsPerImageTextInput->getIntValue() * 1000;
+    float numberOfPixels = this->cameraWidth * this->cameraHeight;
+    float numberOfMilisseconds = this->secondsPerImage * 1000;
     this->millisecondsPerPixel = numberOfMilisseconds / numberOfPixels;
     this->x = 0;
     this->y = 0;
@@ -259,333 +274,191 @@ void ofApp::reset()
     this->lastTimeImageWasSaved = 0;
     this->currentColumn = 0;
 }
-
 //--------------------------------------------------------------
-void ofApp::update(){
-
-    this->videoGrabber->update();
-    if (this->videoGrabber->isFrameNew()) {
-        ofPixels pixels = this->videoGrabber->getPixelsRef();
-
-        pixels.rotate90( this->rotations );
-
-        float now = ofGetElapsedTimeMillis();
-        while (this->lastTimePixelWasDrawn < now) {
-
-            ofColor c = pixels.getColor( this->x, this->y );
-            this->screenImage.setColor( this->x, this->y, c );
-            this->lastTimePixelWasDrawn += this->millisecondsPerPixel;
-
-            ++this->x;
-            if (this->x == (this->currentColumn + 1) * this->columnWidth) {
-                this->x = this->currentColumn * this->columnWidth;
-                ++this->y;
-
-                if (this->y == this->imageHeight) {
-                     ++this->currentColumn;
-                    this->x = this->currentColumn * this->columnWidth;
-                    this->y = 0;
-
-                    if (this->currentColumn == this->columns) {
-                        this->x = 0;
-                        this->currentColumn = 0;
-                    }
-
-                    // saves finished column / image
-                    this->saveCurrentImage();
-                }
-            }
-        }
-
-        this->screenImage.update();
-
-        if (ofGetElapsedTimef() - this->lastTimeImageWasSaved > this->intervalToSaveImage * 60) {
-            this->saveCurrentImage();
-            this->lastTimeImageWasSaved = ofGetElapsedTimef();
-        }
-
-    }
-
-}
-
-//--------------------------------------------------------------
-void ofApp::draw(){
-    // We scale the image so it covers all the screen.
-    // The image is croppred if necessary.
-    float hScale = (float) ofGetWidth() / (float) this->screenImage.width;
-    float vScale = (float) ofGetHeight() / (float) this->screenImage.height;
-
-    float scale = max(hScale, vScale);
-
-    int scaledWidth = (int) roundf((float) this->screenImage.width * scale);
-    int scaledHeight = (int) roundf((float) this->screenImage.height * scale);
-
-    int x = (ofGetWidth() - scaledWidth) / 2;
-    int y = (ofGetHeight() - scaledHeight) / 2;
-
-    this->screenImage.draw(x, y, scaledWidth, scaledHeight);
-}
-
-//--------------------------------------------------------------
-void ofApp::keyPressed(int key){
-
-    if (key == OF_KEY_TAB) {
-
-        if (this->gui->isVisible()) {
-            this->cancelConfigurationChanges();
-            this->hideConfigurationPanel();
-        }
-        else {
-            this->showConfigurationPanel();
-        }
-
-    }
-}
-
-//--------------------------------------------------------------
-void ofApp::keyReleased(int key){
-
-}
-
-//--------------------------------------------------------------
-void ofApp::mouseMoved(int x, int y ){
-
-}
-
-//--------------------------------------------------------------
-void ofApp::mouseDragged(int x, int y, int button){
-
-}
-
-//--------------------------------------------------------------
-void ofApp::mousePressed(int x, int y, int button){
-
-}
-
-//--------------------------------------------------------------
-void ofApp::mouseReleased(int x, int y, int button)
-{
-
-}
-
-//--------------------------------------------------------------
-void ofApp::windowResized(int w, int h){
-
-}
-
-//--------------------------------------------------------------
-void ofApp::gotMessage(ofMessage msg){
-
-}
-
-//--------------------------------------------------------------
-void ofApp::dragEvent(ofDragInfo dragInfo){
-
-}
-
-void ofApp::exit()
-{
-    //delete gui;
-}
-
-void ofApp::saveCurrentImage() {
+void ofApp::saveCurrentImage(){
     char filename[64];
     sprintf( filename, "candle_clock_%04d_%02d_%02d_%02d_%02d_%02d.png", ofGetYear(), ofGetMonth(), ofGetDay(), ofGetHours(), ofGetMinutes(), ofGetSeconds() );
-    this->screenImage.saveImage(filename);
+    
+    this->screenImage.save(filename);
 }
-
-void ofApp::fillImageWithWhite( ofImage* image )
-{
-    // paints with white
-    unsigned char* pixels = image->getPixels();
-    int bytesPerPixel = 3;
-    if (image->type == OF_IMAGE_COLOR_ALPHA)
-        bytesPerPixel = 4;
-    else if (image->type == OF_IMAGE_GRAYSCALE)
-        bytesPerPixel = 1;
-    for (int i =0; i < image->getWidth() * image->getHeight() * bytesPerPixel; i++) {
-        pixels[i] = 255;
-    }
+//--------------------------------------------------------------
+void ofApp::fillImageWithWhite(ofImage * image){
+    image->setColor(ofColor::whiteSmoke);
+    this->lastTimePixelWasDrawn = 0;
+    this->currentColumn = 0;
+    this->x = 0; this->y = 0;
 }
-
-void ofApp::guiEvent(ofxUIEventArgs &e)
-{
-    if (e.getName() == ofApp::SAVE_LABEL) {
-        // catches the click when mouse is released, not pressed
-        if (!e.getButton()->getValue()) {
-
-            this->cameraPanel->saveSettings("camera.xml");
-            this->imagePanel->saveSettings("image.xml");
-            this->gui->saveSettings("settings.xml");
-            this->applyConfigurationChanges();
-            this->reset();
-            this->hideConfigurationPanel();
-
-        }
-    }
-    else if (e.getName() == ofApp::CANCEL_LABEL) {
-        // catches the click when mouse is released, not pressed
-        if (!e.getButton()->getValue()) {
-
-            this->cancelConfigurationChanges();
-            this->hideConfigurationPanel();
-
-        }
-    }
-    else if (e.getName() == ofApp::SUPPORT_BUTTON_NAME) {
-        // catches the click when mouse is released, not pressed
-        if (!e.getButton()->getValue()) {
-            ofLaunchBrowser("http://www.funarte.gov.br/");
-        }
-    }
-
-    if (e.getKind() == OFX_UI_WIDGET_TEXTINPUT){
-        ofxUITextInput *ti = (ofxUITextInput *) e.widget;
-        if (ti->getInputTriggerType() == OFX_UI_TEXTINPUT_ON_FOCUS){
-            this->unfocusAllTextInputs(ti);
-        }
-    }
-}
-
-void ofApp::cameraPanelEvent(ofxUIEventArgs &e)
-{
-    if (e.getName() == ofApp::ZERO_DEGREES_LABEL && e.getToggle()->getValue()) {
-        this->ninetyRotationToggle->setValue(false);
-        this->oneHundredEightyRotationToggle->setValue(false);
-        this->twoHundredSeventyRotationToggle->setValue(false);
-    }
-    else if (e.getName() == ofApp::NINETY_DEGREES_LABEL && e.getToggle()->getValue()) {
-        this->zeroRotationToggle->setValue(false);
-        this->oneHundredEightyRotationToggle->setValue(false);
-        this->twoHundredSeventyRotationToggle->setValue(false);
-    }
-    else if (e.getName() == ofApp::ONE_HUNDRED_EIGHTY_DEGREES_LABEL && e.getToggle()->getValue()) {
-        this->zeroRotationToggle->setValue(false);
-        this->ninetyRotationToggle->setValue(false);
-        this->twoHundredSeventyRotationToggle->setValue(false);
-    }
-    else if (e.getName() == ofApp::TWO_HUNDRED_SEVENTY_DEGREES_LABEL && e.getToggle()->getValue()) {
-        this->zeroRotationToggle->setValue(false);
-        this->ninetyRotationToggle->setValue(false);
-        this->oneHundredEightyRotationToggle->setValue(false);
-    }
-
-    if (e.getKind() == OFX_UI_WIDGET_TEXTINPUT){
-        ofxUITextInput *ti = (ofxUITextInput *) e.widget;
-        if (ti->getInputTriggerType() == OFX_UI_TEXTINPUT_ON_FOCUS){
-            this->unfocusAllTextInputs(ti);
-        }
-    }
-}
-
-void ofApp::imagePanelEvent(ofxUIEventArgs &e)
-{
-    if (e.getName() == ofApp::RESET_IMAGE_LABEL) {
-        // catches the click when mouse is released, not pressed
-        if (!e.getButton()->getValue()) {
-            this->fillImageWithWhite( &this->screenImage );
-            this->screenImage.saveImage("candle_clock.png");
-        }
-    }
-
-    if (e.getKind() == OFX_UI_WIDGET_TEXTINPUT){
-        ofxUITextInput *ti = (ofxUITextInput *) e.widget;
-        if (ti->getInputTriggerType() == OFX_UI_TEXTINPUT_ON_FOCUS){
-            this->unfocusAllTextInputs(ti);
-        }
-    }
-}
-
-void ofApp::hideConfigurationPanel()
-{
-    this->gui->setVisible(false);
-    this->cameraPanel->setVisible(false);
-    this->imagePanel->setVisible(false);
+//--------------------------------------------------------------
+void ofApp::hideConfigurationPanel(){
+    this->configurationPanelShow = false;
     ofHideCursor();
 }
-
-void ofApp::showConfigurationPanel()
-{
-    this->gui->setVisible(true);
-    this->gui->disableKeyEventCallbacks();
-
-    this->cameraPanel->setVisible(true);
-    this->imagePanel->setVisible(true);
+//--------------------------------------------------------------
+void ofApp::showConfigurationPanel(){
+    this->configurationPanelShow = true;
     ofShowCursor();
 }
-
-void ofApp::cancelConfigurationChanges()
-{
-    this->zeroRotationToggle->setValue(this->rotations == 0);
-    this->ninetyRotationToggle->setValue(this->rotations == 1);
-    this->oneHundredEightyRotationToggle->setValue(this->rotations == 2);
-    this->twoHundredSeventyRotationToggle->setValue(this->rotations == 3);
-
-    if (this->rotations % 2 == 0) {
-        this->cameraWidthTextInput->setTextString( ofToString(this->imageWidth) );
-        this->cameraHeightTextInput->setTextString( ofToString(this->imageHeight) );
-    }
-    else {
-        this->cameraWidthTextInput->setTextString( ofToString(this->imageHeight) );
-        this->cameraHeightTextInput->setTextString( ofToString(this->imageWidth) );
-    }
-
-    this->columnsTextInput->setTextString( ofToString(this->columns) );
-    this->intervalToSaveTextInput->setTextString( ofToString(this->intervalToSaveImage) );
-    this->showAtStartupToggle->setValue( this->showAtStartup );
-    this->fullScreenToggle->setValue( this->fullScreen );
-    this->saveImageToggle->setValue( this->saveImage );
+//--------------------------------------------------------------
+void ofApp::cancelConfigurationChanges(){
+    secondsPerImage = 360;
+    columns = 1;
+    intervalToSaveImage= 15;
+    degreesButtonValue = 0;
+    saveImageToggle = false;
+    showAtStartup = true;
+    fullscreen = true;
+    currentResolution = 2;
+    selectedCameraIndex = 0;
 }
-
-void ofApp::applyConfigurationChanges()
-{
-    if (this->zeroRotationToggle->getValue()) {
+//--------------------------------------------------------------
+void ofApp::applyConfigurationChanges(){
+    if (degreesButtonValue == 0) {
         this->rotations = 0;
     }
-    if (this->ninetyRotationToggle->getValue()) {
+    if (degreesButtonValue == 1) {
         this->rotations = 1;
     }
-    else if (this->oneHundredEightyRotationToggle->getValue()) {
+    else if (degreesButtonValue == 2) {
         this->rotations = 2;
     }
-    else if (this->twoHundredSeventyRotationToggle->getValue()) {
+    else if (degreesButtonValue == 3) {
         this->rotations = 3;
     }
-
-    this->zeroRotationToggle->setValue(this->rotations == 0);
-    this->ninetyRotationToggle->setValue(this->rotations == 1);
-    this->oneHundredEightyRotationToggle->setValue(this->rotations == 2);
-    this->twoHundredSeventyRotationToggle->setValue(this->rotations == 3);
-
+    
     if (this->rotations % 2 == 0) {
-        this->imageWidth = this->cameraWidthTextInput->getIntValue();
-        this->imageHeight = this->cameraHeightTextInput->getIntValue();
+        this->imageWidth = this->cameraWidth;
+        this->imageHeight = this->cameraHeight;
     }
     else {
-        this->imageWidth = this->cameraHeightTextInput->getIntValue();
-        this->imageHeight = this->cameraWidthTextInput->getIntValue();
+        this->imageWidth = this->cameraHeight;
+        this->imageHeight = this->cameraWidth;
     }
-
-    this->columns = this->columnsTextInput->getIntValue();
-    this->intervalToSaveImage = this->intervalToSaveTextInput->getIntValue();
-
-    this->showAtStartup = this->showAtStartupToggle->getValue();
-    this->fullScreen = this->fullScreenToggle->getValue();
-    this->saveImage = this->saveImageToggle->getValue();
-
-    if (this->fullScreen) {
+    
+    this->selectResolution();
+    this->setFullscreen();
+}
+//--------------------------------------------------------------
+void ofApp::setFullscreen(){
+    if (fullscreen == true){
         ofSetFullscreen(true);
-    }
-    else {
+    } else {
         ofSetFullscreen(false);
-        ofSetWindowShape(this->imageWidth, this->imageHeight);
+        ofSetWindowShape(cameraWidth, cameraHeight);
     }
 }
-
-void ofApp::unfocusAllTextInputs(ofxUITextInput* except){
-    for (int i = 0; i < this->textInputs.size(); i ++){
-        if (except != this->textInputs[i]){
-            this->textInputs[i]->setFocus(false);
-        }
+//--------------------------------------------------------------
+void ofApp::selectResolution(){
+    this->deviceResolution[0] = "800x600";
+    this->deviceResolution[1] = "1280x720";
+    this->deviceResolution[2] = "1920x1080";
+    
+    if(currentResolution == 0){
+        cameraWidth = 800;
+        cameraHeight = 600;
+    } else if (currentResolution == 1){
+        cameraWidth = 1280;
+        cameraHeight = 720;
+    } else if (currentResolution == 2){
+        cameraWidth = 1920;
+        cameraHeight = 1080;
+    }
+}
+//--------------------------------------------------------------
+void ofApp::saveXmlSettings(){
+    settings.clear();
+    settings.addChild("MAIN");
+    settings.setTo("MAIN");
+    settings.addValue("SECONDS_PER_IMAGE", ofToString(secondsPerImage));
+    settings.addValue("COLUMNS", ofToString(columns));
+    settings.addValue("INTERVAL_TO_SAVE", ofToString(intervalToSaveImage));
+    settings.addValue("DEGREES_BUTTON_VAL", ofToString(degreesButtonValue));
+    settings.addValue("CURRENT_RESOLUTION", ofToString(currentResolution));
+    settings.addValue("SAVE_IMAGE_TOGGLE", ofToString(saveImageToggle));
+    settings.addValue("SHOW_AT_STARTUP", ofToString(showAtStartup));
+    settings.addValue("FULLSCREEN", ofToString(fullscreen));
+    settings.addValue("SHOW_CONFIGURATION_PANEL", ofToString(configurationPanelShow));
+    settings.save("settings.xml");
+}
+//--------------------------------------------------------------
+void ofApp::loadXmlSettings(){
+    this->settings.load("settings.xml");
+    
+    if(settings.exists("//SECONDS_PER_IMAGE")){
+        this->secondsPerImage = settings.getValue<int>("//SECONDS_PER_IMAGE");
+    } else {
+        secondsPerImage = 360;
+    }
+    
+    if(settings.exists("//COLUMNS")){
+        this->columns = settings.getValue<int>("//COLUMNS");
+    } else {
+        columns = 1;
+    }
+    
+    if(settings.exists("//INTERVAL_TO_SAVE")){
+        this->intervalToSaveImage = settings.getValue<int>("//INTERVAL_TO_SAVE");
+    } else {
+        intervalToSaveImage = 15;
+    }
+    
+    if(settings.exists("//DEGREES_BUTTON_VAL")){
+        this->degreesButtonValue = settings.getValue<int>("//DEGREES_BUTTON_VAL");
+    } else {
+        degreesButtonValue = 0;
+    }
+    
+    if(settings.exists("//CURRENT_RESOLUTION")){
+        this->currentResolution = settings.getValue<int>("//CURRENT_RESOLUTION");
+    } else {
+        this->currentResolution = 2;
+    }
+    
+    if(settings.exists("//SAVE_IMAGE_TOGGLE")){
+        this->saveImageToggle = settings.getValue<bool>("//SAVE_IMAGE_TOGGLE");
+    } else {
+        this->saveImageToggle = false;
+    }
+    
+    if(settings.exists("//SHOW_AT_STARTUP")){
+        this->showAtStartup = settings.getValue<bool>("//SHOW_AT_STARTUP");
+    } else {
+        this->showAtStartup = true;
+    }
+    
+    if(settings.exists("//FULLSCREEN")){
+        this->fullscreen = settings.getValue<bool>("//FULLSCREEN");
+    } else {
+        this->fullscreen = true;
+    }
+    
+    if(settings.exists("//SHOW_CONFIGURATION_PANEL")){
+        this->configurationPanelShow = settings.getValue<bool>("//SHOW_CONFIGURATION_PANEL");
+    } else {
+        this->configurationPanelShow = true;
+    }
+    
+}
+//--------------------------------------------------------------
+void ofApp::changeLocale(){
+    if (this->currentLocale == LOCALE_ENGLISH) {
+        this->currentLocale = LOCALE_PORTUGUESE;
+        this->currentStrings = this->ptStrings;
+    }
+    else {
+        this->currentLocale = LOCALE_ENGLISH;
+        this->currentStrings = this->enStrings;
+    }
+    
+    if (this->currentLocale == LOCALE_ENGLISH) {
+        this->changeLocaleLabel = PORTUGUESE_LABEL;
+    }
+    else {
+        this->changeLocaleLabel = ENGLISH_LABEL;
+    }
+}
+//--------------------------------------------------------------
+void ofApp::mouseReleased(ofMouseEventArgs&){
+    if (this->configurationPanelShow == false) {
+        this->showConfigurationPanel();
     }
 }
