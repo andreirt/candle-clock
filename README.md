@@ -2,7 +2,8 @@
 
 Developed in C++ / OpenFrameworks by Andrei Thomaz, Victor Fornaciari and Vitor Andrioli.
 
-http://maquinasdotempo.art.br/
+http://maquinasdotempo.art.br
+
 https://github.com/andreirt/candle-clock
 
 ### Building with Code::Blocks (Windows)
