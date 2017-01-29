@@ -19,7 +19,7 @@ bool ofApp::configurationPanelShow = true;
 
 //--------------------------------------------------------------
 void ofApp::setup(){
-    gui = new ofxImGui;
+    gui = new ofxImGui::Gui();
     gui->setup();
     imageButtonID = gui->loadImage("funarte.png");
     this->imageWidth = 800;

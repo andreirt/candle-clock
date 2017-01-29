@@ -7,7 +7,7 @@ class ofApp : public ofBaseApp{
     
 private:
     ofXml settings;
-    ofxImGui*gui;
+    ofxImGui::Gui* gui;
     GLuint imageButtonID;
     static int intervalToSaveImage;
     static int degreesButtonValue;
